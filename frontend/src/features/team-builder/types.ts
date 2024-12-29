@@ -37,9 +37,9 @@ export interface TeamStats {
 }
 
 export const RANKS = [
-  { value: "CHALLENGER", label: "Challenger", color: "text-yellow-700" },
-  { value: "GRANDMASTER", label: "Grandmaster", color: "text-red-500" },
-  { value: "MASTER", label: "Master", color: "text-purple-500" },
+  { value: "CHALLENGER I", label: "Challenger", color: "text-yellow-700" },
+  { value: "GRANDMASTER I", label: "Grandmaster", color: "text-red-500" },
+  { value: "MASTER I", label: "Master", color: "text-purple-500" },
   { value: "DIAMOND I", label: "Diamond I", color: "text-blue-400" },
   { value: "DIAMOND II", label: "Diamond II", color: "text-blue-400" },
   { value: "DIAMOND III", label: "Diamond III", color: "text-blue-400" },
