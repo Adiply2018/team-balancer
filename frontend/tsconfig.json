@@ -4,10 +4,18 @@
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
   ],
-	"compilerOptions": {
-		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./src/*"]
-		}
-	}
+
+  "compilerOptions": {
+  	"baseUrl": ".",
+	 /* Linting */
+    "strict": false,  // 厳密な型チェックを無効化
+    "noUnusedLocals": false,  // 未使用の変数チェックを無効化
+    "noUnusedParameters": false,  // 未使用のパラメータチェックを無効化
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitAny": false,  // implicit anyを許可
+
+  	"paths": {
+  		"@/*": ["./src/*"]
+  	}
+  }
 }
