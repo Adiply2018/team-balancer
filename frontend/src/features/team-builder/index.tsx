@@ -20,6 +20,9 @@ import RandomnessSlider from "@/components/ui/randomness-slider";
 import { Slider } from "@/components/ui/slider";
 import { FireworksDisplay } from "@/components/ui/fireworks";
 
+let idCounter = 1;
+const generateId = () => `id_${String(idCounter++).padStart(2, "0")}`;
+
 const createEmptySummoner = (id: string): Summoner => ({
   id,
   name: "",
@@ -76,7 +79,7 @@ const TeamBalancer = () => {
         setSummoners((prev) => [
           ...prev,
           ...newNames.map((name) => ({
-            ...createEmptySummoner(crypto.randomUUID()),
+            ...createEmptySummoner(generateId()),
             name,
             isSelected: selectedCount < 10,
           })),
@@ -114,7 +117,7 @@ const TeamBalancer = () => {
       return [
         ...prev,
         {
-          ...createEmptySummoner(crypto.randomUUID()),
+          ...createEmptySummoner(generateId()),
           name: newSummonerName,
           isSelected: selectedCount < 10,
         },
