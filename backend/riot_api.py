@@ -214,7 +214,7 @@ class RiotAPI:
                     rank_info["FLEX"] = rank_data["tier"] + " " + rank_data["rank"]
 
             # マッチヒストリーを取得
-            match_count = 3
+            match_count = 7
             match_history = self.get_match_history(
                 puuid, match_type="ranked", count=match_count
             )
@@ -257,12 +257,11 @@ def get_summoners_data(summoner_names: List[str]) -> List[Dict]:
     riot_api = RiotAPI(RIOT_API_KEY)
 
     summoners_data = []
-    with ThreadPoolExecutor() as executor:
-        results = executor.map(riot_api.get_summoner_data, summoner_names)
-    for summoner_name, data in zip(summoner_names, results):
-        if data:
-            print(f"データ取得完了: {summoner_name}")
-            summoners_data.append(data)
+    for summoner_name in summoner_names:
+        result = riot_api.get_summoner_data(summoner_name)
+        if result:
+            print(f"データ取得成功!: {summoner_name}")
+            summoners_data.append(result)
         else:
             print(f"データ取得失敗: {summoner_name}")
     return summoners_data
