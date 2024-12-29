@@ -173,6 +173,7 @@ const TeamBalancer = () => {
     setLoading(true);
     try {
       const response = await fetch("http://160.251.212.248/api/summoners", {
+        //const response = await fetch("http://localhost:8000/api/summoners", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -237,6 +238,7 @@ const TeamBalancer = () => {
     setLoading(true);
     try {
       const response = await fetch("http://160.251.212.248/api/balance-teams", {
+        //const response = await fetch("http://localhost:8000/api/balance-teams", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

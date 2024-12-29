@@ -92,7 +92,9 @@ def calculate_team_stats(team: List[Summoner]) -> TeamStats:
         )
 
     # 1. 平均ランクスコアの計算
+    log.info(f"Before rank scores: {[s.rank.combined for s in team]}")
     rank_scores = [get_rank_score(s.rank.combined) for s in team]
+    log.info(f"Rank scores: {rank_scores}")
     avg_rank_score = sum(rank_scores) / len(rank_scores)
 
     # 2. 平均ランクの決定
@@ -100,8 +102,7 @@ def calculate_team_stats(team: List[Summoner]) -> TeamStats:
     rank_boundaries = {
         31: ("CHALLENGER", None),
         30: ("GRANDMASTER", None),
-        29: ("MASTER_HIGH", None),
-        28: ("MASTER_LOW", None),
+        28: ("MASTER", None),
         24: ("DIAMOND", True),
         20: ("EMERALD", True),
         16: ("PLATINUM", True),
@@ -166,8 +167,7 @@ def get_rank_score(rank: str) -> float:
         "PLATINUM": 16,
         "EMERALD": 20,
         "DIAMOND": 24,
-        "MASTER_LOW": 28,
-        "MASTER_HIGH": 29,
+        "MASTER": 28,
         "GRANDMASTER": 30,
         "CHALLENGER": 31,
     }
