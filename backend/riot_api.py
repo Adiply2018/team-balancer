@@ -20,7 +20,6 @@ class RiotAPI:
     def __init__(self, api_key: str, cache_dir: Optional[str] = None):
         self.api_key = api_key
         self.headers = {"X-Riot-Token": self.api_key}
-        # 日本リージョンの場合
         self.region = "jp1"
         self.routing = "asia"
 
@@ -270,8 +269,6 @@ def get_summoners_data(summoner_names: List[str]) -> List[Dict]:
 def main():
     # サモナーデータを取得
     summoner_names = [
-        "SugarGliders#CHAMO",
-        "dye it white#JP1",
     ]
     summoners_data = get_summoners_data(summoner_names)
     from pprint import pprint
@@ -284,8 +281,7 @@ def main():
 #    riot_api = RiotAPI(RIOT_API_KEY)
 #
 #    # サモナーデータを取得
-#    # summoner_name = "SugarGliders#CHAMO"
-#    summoner_name = "dye it white#JP1"
+
 #    summoner_data = riot_api.get_summoner_data(summoner_name)
 #    print(summoner_data)
 
