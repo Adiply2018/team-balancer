@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from logger import log
 from riot_api import get_summoners_data
 
-app = FastAPI(title="LoL Team Balancer API")
+app = FastAPI(title="LoL Team Balancer API", docs_url=None, redoc_url=None, openapi_url=None)
 
 # CORSの設定
 app.add_middleware(
