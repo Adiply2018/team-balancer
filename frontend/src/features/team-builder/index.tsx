@@ -60,16 +60,32 @@ const TeamBalancer = () => {
   const lobbySample =
     "ふぇいかー#JP1がロビーに参加しました\nしょうめいかー#JP1がロビーに参加しました\nたーざん#JP1がロビーに参加しました";
 
+  // Unicode制御文字を削除する関数
+  const cleanControlChars = (str: string) => {
+    str = str.trim();
+    const charsToRemove = [
+      "\u2066", // LEFT-TO-RIGHT ISOLATE
+      "\u2067", // RIGHT-TO-LEFT ISOLATE
+      "\u2068", // FIRST STRONG ISOLATE
+      "\u2069", // POP DIRECTIONAL ISOLATE
+    ];
+    return charsToRemove.reduce(
+      (acc, char) => acc.replace(new RegExp(char, "g"), ""),
+      str,
+    );
+  };
+
   const handleLobbyPaste = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       const text = event.target.value;
       setLobbyInput(text);
-
       const joinMessage = "がロビーに参加しました";
+
       const names = text
         .split("\n")
         .filter((line) => line.includes(joinMessage))
         .map((line) => line.split(joinMessage)[0])
+        .map(cleanControlChars) // ここでUnicode制御文字を削除
         .filter((name, index, self) => self.indexOf(name) === index);
 
       const existingNames = new Set(summoners.map((s) => s.name));
@@ -107,9 +123,10 @@ const TeamBalancer = () => {
 
   const handleAddNewSummoner = useCallback(() => {
     if (!newSummonerName.trim()) return;
+    const clean_new_sn = cleanControlChars(newSummonerName);
 
     setSummoners((prev) => {
-      if (prev.some((s) => s.name === newSummonerName)) {
+      if (prev.some((s) => s.name === clean_new_sn)) {
         toast.warning("既に同じサモナー名が存在します。");
         return prev;
       }
@@ -118,7 +135,7 @@ const TeamBalancer = () => {
         ...prev,
         {
           ...createEmptySummoner(generateId()),
-          name: newSummonerName,
+          name: clean_new_sn,
           isSelected: selectedCount < 10,
         },
       ];
