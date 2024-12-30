@@ -1,4 +1,5 @@
 import random
+import re
 import traceback
 from functools import lru_cache
 from typing import Dict, List
@@ -321,13 +322,19 @@ def normalize_rank_format(summoners: List[Summoner]) -> List[Summoner]:
     return summoners
 
 
+def clean_control_chars(text):
+    # 制御文字をフィルタリング
+    return ''.join(char for char in text if char.isprintable())
+
+
 # APIエンドポイント
 @app.post("/api/summoners")
 async def fetch_summoners_data(request: SummonerRequest):
     """サモナー情報を取得するエンドポイント"""
     try:
-        summoners_data = get_summoners_data(request.summonerNames)
-        print(summoners_data)
+        cleaned_sn_list = [clean_control_chars(sn).strip() for sn in request.summonerNames]
+        summoners_data = get_summoners_data(cleaned_sn_list)
+        print(cleaned_sn_list)
         return summoners_data
     except Exception as e:
         log.error(f"Error in fetch_summoners_data: {traceback.format_exc()}")
