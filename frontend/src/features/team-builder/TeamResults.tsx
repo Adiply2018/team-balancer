@@ -96,9 +96,14 @@ ${formatTeam(teamB, teamBStats)}
           <Swords className="h-4 w-4" />
           <label className="text-sm font-medium">チーム分け結果</label>
         </div>
-        <Button onClick={copyToClipboard} variant="outline" size="sm">
-          <Copy className="h-4 w-4 mr-2" />
-          Discord用にコピー
+        <Button
+          onClick={copyToClipboard}
+          variant="outline"
+          size="sm"
+          className=""
+        >
+          <Copy className="h-4 w-4 mr-2  animate-pulse" />
+          <span className="animate-pulse">Discord用にコピー</span>
         </Button>
       </div>
 
@@ -175,7 +180,7 @@ ${formatTeam(teamB, teamBStats)}
                 </HoverCard>
               </div>
               <div className="mt-4 flex gap-2 text-xs text-muted-foreground">
-                <p className="text-xs">得意ロール分布</p>
+                <p className="text-xs">ロール分布</p>
                 {ROLE_ORDER.map((role) => (
                   <div key={role} className="flex items-center gap-1">
                     <img src={laneIcons[role]} alt={role} className="w-4 h-4" />
