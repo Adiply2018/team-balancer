@@ -46,41 +46,49 @@ const TeamResults = ({
   teamBStats,
 }: TeamResultsProps) => {
   if (teamA.length === 0 && teamB.length === 0) return null;
-
   const formatDiscordText = () => {
     const formatTeam = (team: Summoner[], stats: TeamStats) => {
-      const lines = team.map((s) => {
-        const rankInfo = RANKS.find((r) => r.value === s.rank.combined);
-        const roles = Object.entries(s.roleProficiency)
-          .filter(([_, value]) => value > 2)
-          .map(([role]) => role)
-          .join("/");
-        return `${s.name} (${rankInfo?.label || "Unranked"}${roles ? ` - ${roles}` : ""})`;
-      });
+      const playerLines = team
+        .map((s) => {
+          const rankInfo = RANKS.find((r) => r.value === s.rank.combined);
+          const roles = Object.entries(s.roleProficiency)
+            .filter(([_, value]) => value > 2)
+            .map(([role]) => role)
+            .join("/");
 
-      const statsLine = `平均ランク: ${stats.avgRank}`;
-      const championsLine =
-        stats.commonChampions.length > 0
-          ? `よく使うチャンプ: ${stats.commonChampions.map((c) => c.championName).join(", ")}`
-          : "";
+          return `• ${s.name} - ${rankInfo?.label || "Unranked"}${roles ? ` (${roles})` : ""}`;
+        })
+        .join("\n");
 
-      return [...lines, statsLine, championsLine].filter(Boolean).join("\n");
+      return playerLines;
     };
 
+    const teamARank =
+      RANKS.find((r) => r.value === teamAStats.avgRank)?.label ||
+      teamAStats.avgRank;
+    const teamBRank =
+      RANKS.find((r) => r.value === teamBStats.avgRank)?.label ||
+      teamBStats.avgRank;
+
     return `\`\`\`
-チームA
+=== チームA (平均: ${teamARank}) ===
 ${formatTeam(teamA, teamAStats)}
 
-チームB
+=== チームB (平均: ${teamBRank}) ===
 ${formatTeam(teamB, teamBStats)}
 \`\`\``;
   };
-
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(formatDiscordText());
+    const textArea = document.createElement("textarea");
+    textArea.value = formatDiscordText();
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
     toast.success("クリップボードにコピーしました！");
   };
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -166,6 +174,26 @@ ${formatTeam(teamB, teamBStats)}
                   </HoverCardContent>
                 </HoverCard>
               </div>
+              <div className="mt-4 flex gap-2 text-xs text-muted-foreground">
+                <p className="text-xs">得意ロール分布</p>
+                {ROLE_ORDER.map((role) => (
+                  <div key={role} className="flex items-center gap-1">
+                    <img src={laneIcons[role]} alt={role} className="w-4 h-4" />
+                    ×
+                    <span
+                      className={
+                        stats.topRoles[role] === 0
+                          ? "text-red-500 font-bold"
+                          : stats.topRoles[role] >= 2
+                            ? "text-orange-500 font-bold"
+                            : ""
+                      }
+                    >
+                      {stats.topRoles[role] || 0}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -200,11 +228,20 @@ ${formatTeam(teamB, teamBStats)}
                             {Object.entries(summoner.roleProficiency)
                               .filter(([_, value]) => value > 2)
                               .map(([role, value]) => (
-                                <img
-                                  src={laneIcons[role]}
-                                  alt={role}
-                                  className="w-4 h-4"
-                                />
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <img
+                                        src={laneIcons[role]}
+                                        alt={role}
+                                        className="w-4 h-4"
+                                      />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      得意ロール {role}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               ))}
                           </div>
                         </div>
