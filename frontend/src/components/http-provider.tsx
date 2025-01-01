@@ -1,30 +1,28 @@
 import { useEffect } from "react";
 
-interface HttpRedirectProps {
-  httpUrl?: string;
+interface HttpsRedirectProps {
   children: React.ReactNode;
+  enabled?: boolean;
 }
 
-export const HttpRedirect: React.FC<HttpRedirectProps> = ({
-  httpUrl,
+export const HttpRedirect: React.FC<HttpsRedirectProps> = ({
   children,
+  enabled = true,
 }) => {
   useEffect(() => {
-    // ブラウザ環境でのみ実行
-    if (typeof window !== "undefined") {
-      const isHttps = window.location.protocol === "https:";
+    if (typeof window !== "undefined" && enabled) {
+      const protocol = window.location.protocol;
+      const hostname = window.location.hostname;
+      const pathname = window.location.pathname;
+      const search = window.location.search;
 
-      if (isHttps) {
-        const currentUrl = window.location.href;
-        // HTTPSからHTTPへの変換
-        const httpRedirectUrl =
-          httpUrl || currentUrl.replace("https:", "http:");
-
-        // リダイレクト実行
-        window.location.href = httpRedirectUrl;
+      // HTTPSからHTTPへのリダイレクト
+      if (protocol === "https:") {
+        const httpUrl = `http://${hostname}${pathname}${search}`;
+        window.location.replace(httpUrl);
       }
     }
-  }, [httpUrl]);
+  }, [enabled]);
 
   return <>{children}</>;
 };
