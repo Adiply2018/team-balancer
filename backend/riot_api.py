@@ -3,87 +3,87 @@ import os
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import boto3
 import requests
-from dotenv import load_dotenv
 
 from ddragon import ChampionIconGenerator
 
-load_dotenv()
-
-RIOT_API_KEY = os.getenv("RIOT_API_KEY")
-
 
 class RiotAPI:
-    def __init__(self, api_key: str, cache_dir: Optional[str] = None):
+    def __init__(self, api_key: str):
         self.api_key = api_key
         self.headers = {"X-Riot-Token": self.api_key}
         self.region = "jp1"
         self.routing = "asia"
 
-        # キャッシュの設定
-        self.cache_dir = Path(cache_dir) if cache_dir else Path.home() / ".riot_cache"
+        # DynamoDBクライアントの初期化
+        self.dynamodb = boto3.resource("dynamodb")
+        self.cache_table = self.dynamodb.Table(
+            os.environ.get("DYNAMODB_CACHE_TABLE", "riot-api-cache")
+        )
         self.cache_duration = timedelta(hours=24 * 7)  # キャッシュの有効期限
-        self._init_cache_dir()
 
         self.ddragon_version = self.get_ddragon_version()
         self.ddragon = ChampionIconGenerator()
 
-    def _init_cache_dir(self) -> None:
-        """キャッシュディレクトリを初期化"""
-        if not self.cache_dir.exists():
-            self.cache_dir.mkdir(parents=True)
-
-    def _get_cache_path(self, summoner_name: str) -> Path:
-        """サモナー名からキャッシュファイルのパスを取得"""
-        # サモナー名をファイル名として使用可能な形式に変換
-        safe_name = summoner_name.replace("#", "_")
-        return self.cache_dir / f"{safe_name}.json"
+    def _get_cache_key(self, summoner_name: str) -> str:
+        """サモナー名からキャッシュキーを生成"""
+        return f"summoner:{summoner_name}"
 
     def _read_cache(self, summoner_name: str) -> Optional[Dict]:
-        """キャッシュからデータを読み込む"""
-        cache_path = self._get_cache_path(summoner_name)
-        if not cache_path.exists():
-            return None
-
+        """DynamoDBからキャッシュを読み込む"""
         try:
-            with cache_path.open("r", encoding="utf-8") as f:
-                cached_data = json.load(f)
+            response = self.cache_table.get_item(
+                Key={"cache_key": self._get_cache_key(summoner_name)}
+            )
+
+            if "Item" not in response:
+                return None
+
+            cached_data = response["Item"]
+            cached_time = datetime.fromisoformat(cached_data["cached_at"])
 
             # キャッシュの有効期限をチェック
-            cached_time = datetime.fromisoformat(cached_data["cached_at"])
             if datetime.now() - cached_time > self.cache_duration:
                 return None
 
-            return cached_data["data"]
-        except (json.JSONDecodeError, KeyError, ValueError):
+            return json.loads(cached_data["data"])
+        except Exception as e:
+            print(f"キャッシュの読み込みに失敗: {e}")
             return None
 
     def _write_cache(self, summoner_name: str, data: Dict) -> None:
-        """データをキャッシュに書き込む"""
-        cache_path = self._get_cache_path(summoner_name)
-        cache_data = {"data": data, "cached_at": datetime.now().isoformat()}
-
+        """DynamoDBにキャッシュを書き込む"""
         try:
-            with cache_path.open("w", encoding="utf-8") as f:
-                json.dump(cache_data, f, ensure_ascii=False, indent=2)
+            cache_item = {
+                "cache_key": self._get_cache_key(summoner_name),
+                "data": json.dumps(data),
+                "cached_at": datetime.now().isoformat(),
+                "ttl": int((datetime.now() + self.cache_duration).timestamp()),
+            }
+            self.cache_table.put_item(Item=cache_item)
         except Exception as e:
-            print(f"キャッシュの書き込みに失敗しました: {e}")
+            print(f"キャッシュの書き込みに失敗: {e}")
 
     def request(
         self, url: str, headers: Dict, params: Dict = {}, retry: int = 0
     ) -> requests.Response:
-        """
-        ratelimitなら待機してからリクエストを送信するラッパー関数
-        """
-        response = requests.get(url, headers=headers, params=params)
-        if response.status_code == 429:
-            print("Rate limit exceeded", retry)
-            time.sleep(1 * 2**retry)
-            return self.request(url, headers, params, retry + 1)
-        return response
+        """レート制限対応のリクエストラッパー"""
+        try:
+            response = requests.get(url, headers=headers, params=params, timeout=5)
+            if response.status_code == 429:
+                if retry >= 3:  # 最大リトライ回数
+                    raise Exception("Rate limit exceeded after maximum retries")
+                time.sleep(1 * 2**retry)
+                return self.request(url, headers, params, retry + 1)
+            response.raise_for_status()
+            return response
+        except requests.exceptions.Timeout:
+            raise Exception("Request timeout")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Request failed: {str(e)}")
 
     def get_ddragon_version(self) -> str:
         """DDragonのバージョンを取得"""
@@ -130,9 +130,8 @@ class RiotAPI:
 
     def get_player_match_detail(self, match_id: str, puuid: str) -> Optional[Dict]:
         """特定プレイヤーのマッチ詳細を取得"""
-        match_detail = self.get_match_detail(match_id)
-
         try:
+            match_detail = self.get_match_detail(match_id)
             for participant in match_detail["info"]["participants"]:
                 if participant["puuid"] == puuid:
                     return {
@@ -140,18 +139,14 @@ class RiotAPI:
                         "champion": participant["championName"],
                         "role": participant["teamPosition"],
                     }
-        except KeyError:
-            print(f"Error processing match {match_id}")
-            print(match_detail.keys())
+        except Exception as e:
+            print(f"Error processing match {match_id}: {e}")
         return None
 
     def calculate_role_proficiency(
         self, champ_roles: List[Dict]
     ) -> Tuple[Dict[str, int], List[Tuple[tuple, int]]]:
-        """
-        役割ごとの使用率を計算して0~5の整数で返す
-        使用率が高いチャンピオンTOP３も返す
-        """
+        """役割ごとの使用率を計算"""
         role_counts = {"TOP": 0, "JUNGLE": 0, "MIDDLE": 0, "BOTTOM": 0, "UTILITY": 0}
         for champ_role in champ_roles:
             role_counts[champ_role["role"]] += 1
@@ -174,15 +169,12 @@ class RiotAPI:
         return role_proficiency, top_champs
 
     def get_summoner_data(self, summoner_name: str) -> Dict:
-        """
-        サモナー名から各種データを取得してまとめて返す
-        キャッシュがある場合はキャッシュから返す
-        """
-        # キャッシュをチェック
+        """サモナーの総合データを取得"""
         try:
+            # キャッシュをチェック
             cached_data = self._read_cache(summoner_name)
             if cached_data:
-                print(f"キャッシュからデータを読み込みました: {summoner_name}")
+                print(f"Cache hit for: {summoner_name}")
                 return cached_data
 
             # サモナー名とタグラインを分割
@@ -196,6 +188,7 @@ class RiotAPI:
             raw_summoner_info = self.get_summoner_info(puuid)
             encrypted_summoner_id = raw_summoner_info["id"]
 
+            # プロフィールアイコン情報
             icon_num = raw_summoner_info["profileIconId"]
             summoner_info = {
                 "name": summoner_name,
@@ -218,17 +211,18 @@ class RiotAPI:
                 puuid, match_type="ranked", count=match_count
             )
             if len(match_history) < match_count:
-                print("ランクマッチが足りません。通常マッチも含めて取得します。")
                 match_history = self.get_match_history(puuid, count=match_count)
 
             # マッチ詳細を並列で取得
-            with ThreadPoolExecutor() as executor:
-                results = executor.map(
-                    lambda match_id: self.get_player_match_detail(match_id, puuid),
-                    match_history,
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                results = list(
+                    executor.map(
+                        lambda match_id: self.get_player_match_detail(match_id, puuid),
+                        match_history,
+                    )
                 )
 
-            # Noneを除外して役割の使用率とチャンピオンの使用率を計算
+            # 役割の使用率とチャンピオンの使用率を計算
             results = list(filter(None, results))
             role_proficiency, top_champs = self.calculate_role_proficiency(results)
 
@@ -239,52 +233,40 @@ class RiotAPI:
                 "top3_champs": top_champs,
             }
 
-            # データをキャッシュに保存
+            # キャッシュに保存
             self._write_cache(summoner_name, data)
-        except Exception as e:
-            print(f"データ取得中にエラーが発生しました: {e}")
-            return {}
+            return data
 
-        return data
+        except Exception as e:
+            print(f"Error fetching data for {summoner_name}: {str(e)}")
+            return {}
 
 
 def get_summoners_data(summoner_names: List[str]) -> List[Dict]:
     """複数のサモナーのデータを取得"""
-    if not RIOT_API_KEY:
-        raise ValueError("RIOT_API_KEYが設定されていません。")
+    api_key = os.environ.get("RIOT_API_KEY")
+    if not api_key:
+        raise ValueError("RIOT_API_KEY environment variable is not set")
 
-    riot_api = RiotAPI(RIOT_API_KEY)
-
+    riot_api = RiotAPI(api_key)
     summoners_data = []
-    for summoner_name in summoner_names:
-        result = riot_api.get_summoner_data(summoner_name)
-        if result:
-            print(f"データ取得成功!: {summoner_name}")
-            summoners_data.append(result)
-        else:
-            print(f"データ取得失敗: {summoner_name}")
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        future_to_name = {
+            executor.submit(riot_api.get_summoner_data, name): name
+            for name in summoner_names
+        }
+
+        for future in future_to_name:
+            name = future_to_name[future]
+            try:
+                result = future.result()
+                if result:
+                    print(f"Successfully fetched data for: {name}")
+                    summoners_data.append(result)
+                else:
+                    print(f"No data found for: {name}")
+            except Exception as e:
+                print(f"Error fetching data for {name}: {str(e)}")
+
     return summoners_data
-
-
-def main():
-    # サモナーデータを取得
-    summoner_names = [
-    ]
-    summoners_data = get_summoners_data(summoner_names)
-    from pprint import pprint
-
-    pprint(summoners_data)
-
-
-# def main():
-#    # APIキーを設定
-#    riot_api = RiotAPI(RIOT_API_KEY)
-#
-#    # サモナーデータを取得
-
-#    summoner_data = riot_api.get_summoner_data(summoner_name)
-#    print(summoner_data)
-
-
-if __name__ == "__main__":
-    main()
