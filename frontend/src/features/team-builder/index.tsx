@@ -19,6 +19,7 @@ import TeamResults from "./TeamResults";
 import RandomnessSlider from "@/components/ui/randomness-slider";
 import { Slider } from "@/components/ui/slider";
 import { FireworksDisplay } from "@/components/ui/fireworks";
+import ThemeSwitcher from "@/components/theme-toggle";
 
 let idCounter = 1;
 const generateId = () => `id_${String(idCounter++).padStart(2, "0")}`;
@@ -310,6 +311,7 @@ const TeamBalancer = () => {
             className="w-10 h-10 rounded-full"
           />
           LoL Team Balancer
+          <ThemeSwitcher />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -338,6 +340,7 @@ const TeamBalancer = () => {
               <Button
                 onClick={fetchSummonersData}
                 disabled={loading || selectedCount === 0}
+                variant="secondary"
               >
                 <Users className="mr-2 h-4 w-4" />
                 サモナー情報を取得
@@ -374,7 +377,7 @@ const TeamBalancer = () => {
                 value={newSummonerName}
                 onChange={(e) => setNewSummonerName(e.target.value)}
                 placeholder="サモナー名を入力(Enterで追加)"
-                className="w-48"
+                className="w-64"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleAddNewSummoner();
                 }}
