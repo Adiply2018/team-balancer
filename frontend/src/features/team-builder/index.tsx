@@ -189,14 +189,16 @@ const TeamBalancer = () => {
 
     setLoading(true);
     try {
-      const response = await fetch("http://160.251.212.248/api/summoners", {
-        //const response = await fetch("http://localhost:8000/api/summoners", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          summonerNames: selectedSummoners.map((s) => s.name),
-        }),
-      });
+      const response = await fetch(
+        "https://2hkuubvqk5.execute-api.ap-northeast-1.amazonaws.com/prod/api/summoners",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            summonerNames: selectedSummoners.map((s) => s.name),
+          }),
+        },
+      );
 
       if (!response.ok) throw new Error("APIリクエストに失敗しました");
 
@@ -254,15 +256,17 @@ const TeamBalancer = () => {
 
     setLoading(true);
     try {
-      const response = await fetch("http://160.251.212.248/api/balance-teams", {
-        //const response = await fetch("http://localhost:8000/api/balance-teams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          summoners: updatedSummoners,
-          randomness: randomness[0],
-        }),
-      });
+      const response = await fetch(
+        "https://2hkuubvqk5.execute-api.ap-northeast-1.amazonaws.com/prod/api/balance-teams",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            summoners: updatedSummoners,
+            randomness: randomness[0],
+          }),
+        },
+      );
 
       if (!response.ok) throw new Error("チーム分けに失敗しました");
 

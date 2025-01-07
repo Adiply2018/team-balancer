@@ -13,18 +13,18 @@ function App() {
         <div className="container mx-auto p-4 space-y-4">
           <TeamBalancer />
 
-          {window.location.protocol === "https:" && (
+          {window.location.protocol === "http:" && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>
-                大人の理由(怠惰)によりhttpsだと動かないので、httpでアクセスしてください。
+                httpsでも動くようになったのでなんでもおっけ〜！
               </AlertTitle>
               <AlertDescription>
                 <a
-                  href="http://momongapp.site"
+                  href="https://momongapp.site"
                   className="underline hover:text-blue-500"
                 >
-                  http://momongapp.site
+                  https://momongapp.site
                 </a>
               </AlertDescription>
             </Alert>
