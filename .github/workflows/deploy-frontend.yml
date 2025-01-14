@@ -1,45 +1,42 @@
 name: Deploy Frontend to GitHub Pages
-
 on:
   push:
     branches: [main]
     paths:
       - "frontend/**"
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
           cache-dependency-path: "frontend/package-lock.json"
-
+      - name: Create riot.txt
+        working-directory: frontend
+        run: |
+          mkdir -p public
+          echo "43dca742-f8a3-4798-a653-ecf7ccec4314" > public/riot.txt
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
-
       - name: Build
         working-directory: frontend
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
         run: npm run build
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
           path: frontend/dist
-
   deploy:
     environment:
       name: github-pages
