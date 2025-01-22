@@ -29,7 +29,7 @@ function App() {
               </AlertDescription>
             </Alert>
           )}
-          <Toaster position="top-right" />
+          <Toaster position="bottom-right" />
         </div>
       </RootLayout>
     </>

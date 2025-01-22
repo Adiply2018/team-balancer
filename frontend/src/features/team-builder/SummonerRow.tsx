@@ -83,7 +83,7 @@ export const SummonerRow = React.memo(
                 <div className="flex gap-1 mt-1">
                   {summoner.top3Champs.map(
                     ([[champIcon, champName], count], index) => (
-                      <TooltipProvider key={index}>
+                      <TooltipProvider key={`${champName}-${index}`}>
                         <Tooltip>
                           <TooltipTrigger>
                             <div className="flex items-center gap-1">
@@ -124,7 +124,7 @@ export const SummonerRow = React.memo(
               <SelectItem value="UNRANKED">Unranked</SelectItem>
               {RANKS.map((rank) => (
                 <SelectItem
-                  key={rank.value}
+                  key={`${rank.value}-combined`}
                   value={rank.value}
                   className={rank.color}
                 >
@@ -135,7 +135,7 @@ export const SummonerRow = React.memo(
           </Select>
         </TableCell>
         {(Object.keys(summoner.roleProficiency) as Role[]).map((role) => (
-          <TableCell key={role}>
+          <TableCell key={`${summoner.id}-${role}`}>
             <Select
               value={String(summoner.roleProficiency[role])}
               onValueChange={(value) =>
@@ -147,7 +147,10 @@ export const SummonerRow = React.memo(
               </SelectTrigger>
               <SelectContent>
                 {[0, 1, 2, 3, 4, 5].map((level) => (
-                  <SelectItem key={level} value={String(level)}>
+                  <SelectItem
+                    key={`${summoner.id}-${role}-${level}`}
+                    value={String(level)}
+                  >
                     <span className={roleLevelColors[level]}>
                       {String(level)}
                     </span>

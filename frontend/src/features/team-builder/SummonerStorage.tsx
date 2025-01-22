@@ -49,6 +49,7 @@ export const SummonerStorage: React.FC<StorageProps> = ({
       const payload = {
         passphrase: passphrase.join(""),
         summoners: summoners.map((s) => ({
+          id: s.id,
           name: s.name,
           icon: s.icon,
           level: s.level,
@@ -58,6 +59,7 @@ export const SummonerStorage: React.FC<StorageProps> = ({
           isSelected: s.isSelected,
         })),
       };
+      console.log("payload", payload);
 
       const response = await fetch(
         "https://2hkuubvqk5.execute-api.ap-northeast-1.amazonaws.com/prod/api/save-summoners",
@@ -129,7 +131,7 @@ export const SummonerStorage: React.FC<StorageProps> = ({
   };
   return (
     <div className="">
-      <div className="flex gap-1 mb-1">
+      <div className="flex gap-1 mb-2">
         {Array(6)
           .fill(0)
           .map((_, index) => (
@@ -139,12 +141,20 @@ export const SummonerStorage: React.FC<StorageProps> = ({
               value={passphrase[index]}
               onChange={(e) => handleInputChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className="w-10 h-10 text-center uppercase font-mono text-lg"
+              className="w-10 h-10 text-center uppercase text-lg"
               maxLength={1}
             />
           ))}
       </div>
-      <div className="flex gap-1">
+      <div className="flex gap-1 justify-end">
+        <Button
+          onClick={handleLoad}
+          disabled={passphrase.join("").length !== 6 || loading}
+          variant="secondary"
+        >
+          <Download className="mr-2 h-4 w-4 text-blue-400" />
+          ロード
+        </Button>
         <Button
           onClick={handleSave}
           disabled={
@@ -152,16 +162,8 @@ export const SummonerStorage: React.FC<StorageProps> = ({
           }
           variant="secondary"
         >
-          <Save className="mr-2 h-4 w-4" />
-          保存
-        </Button>
-        <Button
-          onClick={handleLoad}
-          disabled={passphrase.join("").length !== 6 || loading}
-          variant="secondary"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          読み込み
+          <Save className="mr-2 h-4 w-4 text-green-400" />
+          セーブ
         </Button>
       </div>
     </div>

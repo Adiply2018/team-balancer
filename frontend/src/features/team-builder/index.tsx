@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dialog";
 
 let idCounter = 1;
-const generateId = () => `id_${String(idCounter++).padStart(2, "0")}`;
+const generateId = () => `sid_${String(idCounter++).padStart(2, "0")}`;
 
 const createEmptySummoner = (id: string): Summoner => ({
   id,
@@ -247,6 +247,7 @@ const TeamBalancer = () => {
   }, [summoners]);
 
   const balanceTeams = useCallback(async () => {
+    console.log("summoners", summoners);
     const selectedSummoners = summoners.filter((s) => s.isSelected);
     if (selectedSummoners.length !== 10) {
       toast.error("チーム分けには10人のサモナーを選択する必要があります。");
@@ -340,7 +341,16 @@ const TeamBalancer = () => {
           <DialogHeader>
             <DialogTitle>設定</DialogTitle>
           </DialogHeader>
-          <p className="mb-2">サモナー情報の保存/読み込み</p>
+          <p className="mb-1">サモナー情報の保存/読み込み</p>
+          <ul className="ml-6 list-disc mb-1">
+            <li className="text-muted-foreground text-sm">
+              6文字の合言葉を入力して保存/読み込みを行います
+            </li>
+            <li className="text-muted-foreground text-sm">
+              保存してから2週間で期限切れになります
+            </li>
+          </ul>
+
           <SummonerStorage
             summoners={summoners}
             onLoadSummoners={handleLoadSummoners}
@@ -459,7 +469,7 @@ const TeamBalancer = () => {
               value={newSummonerName}
               onChange={(e) => setNewSummonerName(e.target.value)}
               placeholder="サモナー追加(Enterで追加)"
-              className="w-full sm:w-48"
+              className="w-full"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddNewSummoner();
               }}
@@ -473,8 +483,8 @@ const TeamBalancer = () => {
             <TableRow>
               <TableHead className="w-12">No.</TableHead>
               <TableHead className="w-12">選択</TableHead>
-              <TableHead>サモナー名</TableHead>
-              <TableHead className="w-48">ランク</TableHead>
+              <TableHead className="min-w-48">サモナー名</TableHead>
+              <TableHead className="w-32">ランク</TableHead>
               <TableHead>TOP</TableHead>
               <TableHead>JG</TableHead>
               <TableHead>MID</TableHead>
@@ -484,9 +494,9 @@ const TeamBalancer = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {summoners.map((summoner) => (
+            {summoners.map((summoner, index) => (
               <SummonerRow
-                idx={summoners.indexOf(summoner) + 1}
+                idx={index + 1}
                 key={summoner.id}
                 summoner={summoner}
                 onInputChange={handleInputChange}

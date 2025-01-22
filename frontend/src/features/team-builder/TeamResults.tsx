@@ -109,14 +109,17 @@ ${formatTeam(teamB, teamBStats)}
 
       <div className="grid grid-cols-2 gap-2">
         {[
-          { title: "A", team: teamA, stats: teamAStats },
-          { title: "B", team: teamB, stats: teamBStats },
+          { title: "チームA", team: teamA, stats: teamAStats },
+          { title: "チームB", team: teamB, stats: teamBStats },
         ].map(({ title, team, stats }) => (
-          <Card key={title} className="relative overflow-hidden w-full">
+          <Card
+            key={`team-${title}`}
+            className="relative overflow-hidden w-full"
+          >
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
                 <CardTitle
-                  className={`text-md flex ${title === "A" ? "text-red-500" : "text-blue-500"}`}
+                  className={`text-md flex ${title === "チームA" ? "text-red-500" : "text-blue-500"}`}
                 >
                   <Flag className="h-5 w-5 mr-2" />
                   {title}
@@ -154,7 +157,10 @@ ${formatTeam(teamB, teamBStats)}
                       </div>
                       <div className="space-y-1 text-xs">
                         {ROLE_ORDER.map((role) => (
-                          <div key={role} className="flex items-center gap-2">
+                          <div
+                            key={`role-${role}-${team}`}
+                            className="flex items-center gap-2"
+                          >
                             <span className="text-muted-foreground w-6">
                               <img
                                 src={laneIcons[role]}
@@ -182,7 +188,10 @@ ${formatTeam(teamB, teamBStats)}
               <div className="mt-4 flex gap-2 text-xs text-muted-foreground">
                 <p className="text-xs">ロール分布</p>
                 {ROLE_ORDER.map((role) => (
-                  <div key={role} className="flex items-center gap-1">
+                  <div
+                    key={`role-${role}-${team}`}
+                    className="flex items-center gap-1"
+                  >
                     <img src={laneIcons[role]} alt={role} className="w-4 h-4" />
                     ×
                     <span
@@ -203,7 +212,10 @@ ${formatTeam(teamB, teamBStats)}
             <CardContent>
               <div className="space-y-3">
                 {team.map((summoner) => (
-                  <div key={summoner.id} className="flex flex-col gap-1">
+                  <div
+                    key={`summoner-${summoner.id}-${title}`}
+                    className="flex flex-col gap-1"
+                  >
                     <div className="flex items-center gap-2">
                       {summoner.icon && (
                         <img
@@ -256,7 +268,7 @@ ${formatTeam(teamB, teamBStats)}
                       <div className="flex gap-1 ml-10">
                         {summoner.top3Champs.map(
                           ([[champIcon, champName], count], index) => (
-                            <TooltipProvider key={index}>
+                            <TooltipProvider key={`${champName}-${index}`}>
                               <Tooltip>
                                 <TooltipTrigger>
                                   <div className="flex items-center gap-1">
