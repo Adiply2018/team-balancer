@@ -112,7 +112,7 @@ ${formatTeam(teamB, teamBStats)}
           { title: "A", team: teamA, stats: teamAStats },
           { title: "B", team: teamB, stats: teamBStats },
         ].map(({ title, team, stats }) => (
-          <Card key={title} className="relative overflow-hidden">
+          <Card key={title} className="relative overflow-hidden w-full">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
                 <CardTitle

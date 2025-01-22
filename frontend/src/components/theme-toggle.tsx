@@ -6,6 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Button } from "./ui/button";
 
 const ThemeSwitcher = () => {
   const [theme, setTheme] = useState("light");
@@ -30,37 +31,14 @@ const ThemeSwitcher = () => {
   }
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg transition-colors duration-200"
-            aria-label="テーマの切り替え"
-          >
-            <div className="relative w-6 h-6">
-              <Sun
-                className={`absolute top-0 left-0 transition-all duration-500 w-6 h-6 ${
-                  theme === "dark"
-                    ? "opacity-0 rotate-180"
-                    : "opacity-100 rotate-0"
-                }`}
-              />
-              <Moon
-                className={`absolute top-0 left-0 transition-all duration-500 w-6 h-6 ${
-                  theme === "dark"
-                    ? "opacity-100 rotate-0"
-                    : "opacity-0 -rotate-180"
-                }`}
-              />
-            </div>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{theme === "light" ? "ダーク" : "ライト"}モードに切り替え</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Button variant="ghost" size="icon" onClick={toggleTheme}>
+      <Sun
+        className={`absolute w-5 h-5 ${theme === "dark" ? "opacity-0" : "opacity-100"}`}
+      />
+      <Moon
+        className={`absolute w-5 h-5 ${theme === "light" ? "opacity-0" : "opacity-100"}`}
+      />
+    </Button>
   );
 };
 

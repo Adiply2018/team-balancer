@@ -10,7 +10,7 @@ function App() {
   return (
     <>
       <RootLayout>
-        <div className="container mx-auto p-4 space-y-4">
+        <div className="p-4 space-y-4">
           <TeamBalancer />
 
           {window.location.protocol === "http:" && (

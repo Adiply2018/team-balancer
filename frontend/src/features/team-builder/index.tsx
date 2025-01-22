@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import MOMONGA_ICON from "@/assets/momonga.png";
 import {
@@ -11,15 +10,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Swords, Users, Plus } from "lucide-react";
+import { Swords, Users, Plus, Settings, Info } from "lucide-react";
 import { toast } from "sonner";
 import { SummonerRow } from "./SummonerRow";
 import { type Summoner, type Role, RANKS } from "./types";
 import TeamResults from "./TeamResults";
-import RandomnessSlider from "@/components/ui/randomness-slider";
 import { Slider } from "@/components/ui/slider";
 import { FireworksDisplay } from "@/components/ui/fireworks";
 import ThemeSwitcher from "@/components/theme-toggle";
+import { SummonerStorage } from "./SummonerStorage";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 let idCounter = 1;
 const generateId = () => `id_${String(idCounter++).padStart(2, "0")}`;
@@ -52,6 +57,8 @@ const TeamBalancer = () => {
   const [teamBStats, setTeamBStats] = useState(null);
   const [randomness, setRandomness] = useState([0]);
   const [showFireworks, setShowFireworks] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   const selectedCount = useMemo(
     () => summoners.filter((s) => s.isSelected).length,
@@ -61,15 +68,9 @@ const TeamBalancer = () => {
   const lobbySample =
     "ふぇいかー#JP1がロビーに参加しました\nしょうめいかー#JP1がロビーに参加しました\nたーざん#JP1がロビーに参加しました";
 
-  // Unicode制御文字を削除する関数
   const cleanControlChars = (str: string) => {
     str = str.trim();
-    const charsToRemove = [
-      "\u2066", // LEFT-TO-RIGHT ISOLATE
-      "\u2067", // RIGHT-TO-LEFT ISOLATE
-      "\u2068", // FIRST STRONG ISOLATE
-      "\u2069", // POP DIRECTIONAL ISOLATE
-    ];
+    const charsToRemove = ["\u2066", "\u2067", "\u2068", "\u2069"];
     return charsToRemove.reduce(
       (acc, char) => acc.replace(new RegExp(char, "g"), ""),
       str,
@@ -86,7 +87,7 @@ const TeamBalancer = () => {
         .split("\n")
         .filter((line) => line.includes(joinMessage))
         .map((line) => line.split(joinMessage)[0])
-        .map(cleanControlChars) // ここでUnicode制御文字を削除
+        .map(cleanControlChars)
         .filter((name, index, self) => self.indexOf(name) === index);
 
       const existingNames = new Set(summoners.map((s) => s.name));
@@ -252,7 +253,6 @@ const TeamBalancer = () => {
       return;
     }
 
-    // すでにsummonersのデータが最新なので、selectedSummonersをそのまま使用
     const updatedSummoners = selectedSummoners;
 
     setLoading(true);
@@ -277,8 +277,7 @@ const TeamBalancer = () => {
         teamAStats: newTeamAStats,
         teamBStats: newTeamBStats,
       } = await response.json();
-      console.log(newTeamAStats);
-      console.log(newTeamBStats);
+
       setTeamA(newTeamA);
       setTeamB(newTeamB);
       setTeamAStats(newTeamAStats);
@@ -299,44 +298,127 @@ const TeamBalancer = () => {
       toast.error("チーム分けに失敗しました。");
     }
     setLoading(false);
-  }, [summoners]);
+  }, [summoners, randomness]);
+
+  const handleLoadSummoners = useCallback((loadedSummoners: Summoner[]) => {
+    setSummoners(loadedSummoners);
+  }, []);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
           <img
             src={MOMONGA_ICON}
             alt="MOMONGA"
             className="w-10 h-10 rounded-full"
           />
-          LoL Team Balancer
+          <h1 className="text-2xl font-bold">LoLカスタムチーム分けツール</h1>
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsInfoOpen(true)}
+          >
+            <Info className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
           <ThemeSwitcher />
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              カスタムロビーメッセージ
-            </label>
-            <Textarea
-              placeholder={lobbySample}
-              value={lobbyInput}
-              onChange={handleLobbyPaste}
-              className="h-32"
-            />
-          </div>
+        </div>
+      </div>
 
-          <TeamResults
-            teamA={teamA}
-            teamB={teamB}
-            teamAStats={teamAStats}
-            teamBStats={teamBStats}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>設定</DialogTitle>
+          </DialogHeader>
+          <p className="mb-2">サモナー情報の保存/読み込み</p>
+          <SummonerStorage
+            summoners={summoners}
+            onLoadSummoners={handleLoadSummoners}
           />
+        </DialogContent>
+      </Dialog>
 
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2">
+      <Dialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>使い方</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-bold mb-2">サモナーの追加方法</h3>
+              <p>1. カスタムロビーメッセージを貼り付け</p>
+              <p className="text-sm text-muted-foreground ml-4">
+                -
+                ロビーのチャットメッセージを入力欄に貼り付けると自動的にサモナーが追加されます
+              </p>
+              <p>2. 手動での追加</p>
+              <p className="text-sm text-muted-foreground ml-4">
+                - 画面右上の入力欄にサモナー名を入力し、Enterキーで追加できます
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-bold mb-2">チーム分けの手順</h3>
+              <p>1. サモナーの選択（10名必要）</p>
+              <p className="text-sm text-muted-foreground ml-4">
+                - 追加したサモナーから10名を選択します -
+                「サモナー情報を取得」ボタンで選択したサモナーの情報を更新します
+              </p>
+              <p>2. チーム分けの実行</p>
+              <p className="text-sm text-muted-foreground ml-4">
+                - 10名選択後、「チーム分け実行」ボタンをクリックします -
+                ランダム性スライダーでチーム分けのランダム性を0-100%で調整できます
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-bold mb-2">その他の機能</h3>
+              <ul className="text-sm text-muted-foreground ml-4 space-y-1">
+                <li>- サモナー情報の保存/読み込みが可能です</li>
+                <li>- 各サモナーのランクやロール熟練度を手動で調整できます</li>
+                <li>
+                  -
+                  チーム分け結果は自動的に表示され、両チームの統計も確認できます
+                </li>
+              </ul>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            カスタムロビーメッセージ
+          </label>
+          <Textarea
+            placeholder={lobbySample}
+            value={lobbyInput}
+            onChange={handleLobbyPaste}
+            className="h-32 min-w-[300px]"
+          />
+        </div>
+
+        <TeamResults
+          teamA={teamA}
+          teamB={teamB}
+          teamAStats={teamAStats}
+          teamBStats={teamBStats}
+        />
+
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+          <div className="flex flex-col gap-4 sm:flex-row sm:gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row">
               <Button
                 onClick={fetchSummonersData}
                 disabled={loading || selectedCount === 0}
@@ -351,75 +433,71 @@ const TeamBalancer = () => {
                 variant="secondary"
               >
                 <Swords className="mr-2 h-4 w-4" />
-                チーム分け実行 ({
+                チームを分ける ({
                   selectedCount
                 }/10)
               </Button>
-
-              <div>
-                <label className="block text-xs font-medium mb-2">
-                  チーム分けのランダム性 ({randomness}%)
-                </label>
-                <Slider
-                  max={100}
-                  min={0}
-                  step={1}
-                  value={randomness}
-                  onValueChange={setRandomness}
-                  className="w-48"
-                />
-              </div>
             </div>
 
-            <FireworksDisplay trigger={showFireworks} />
-            <div className="flex gap-2">
-              <Input
-                value={newSummonerName}
-                onChange={(e) => setNewSummonerName(e.target.value)}
-                placeholder="サモナー名を入力(Enterで追加)"
-                className="w-64"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAddNewSummoner();
-                }}
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block text-xs font-medium mb-2">
+                チーム分けのランダム性 ({randomness}%)
+              </label>
+              <Slider
+                max={100}
+                min={0}
+                step={1}
+                value={randomness}
+                onValueChange={setRandomness}
+                className="w-full sm:w-48"
               />
-              <Button onClick={handleAddNewSummoner}>
-                <Plus className="h-4 w-4" />
-                追加
-              </Button>
             </div>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">No.</TableHead>
-                <TableHead className="w-12">選択</TableHead>
-                <TableHead>サモナー名</TableHead>
-                <TableHead className="w-48">ランク</TableHead>
-                <TableHead>TOP</TableHead>
-                <TableHead>JG</TableHead>
-                <TableHead>MID</TableHead>
-                <TableHead>BOT</TableHead>
-                <TableHead>SUP</TableHead>
-                <TableHead className="w-12">操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {summoners.map((summoner) => (
-                <SummonerRow
-                  idx={summoners.indexOf(summoner) + 1}
-                  key={summoner.id}
-                  summoner={summoner}
-                  onInputChange={handleInputChange}
-                  onToggleSelection={toggleSummonerSelection}
-                  onDelete={deleteSummoner}
-                />
-              ))}
-            </TableBody>
-          </Table>
+          <div className="w-full sm:w-auto">
+            <Input
+              value={newSummonerName}
+              onChange={(e) => setNewSummonerName(e.target.value)}
+              placeholder="サモナー追加(Enterで追加)"
+              className="w-full sm:w-48"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddNewSummoner();
+              }}
+            />
+          </div>
         </div>
-      </CardContent>
-    </Card>
+
+        <FireworksDisplay trigger={showFireworks} />
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">No.</TableHead>
+              <TableHead className="w-12">選択</TableHead>
+              <TableHead>サモナー名</TableHead>
+              <TableHead className="w-48">ランク</TableHead>
+              <TableHead>TOP</TableHead>
+              <TableHead>JG</TableHead>
+              <TableHead>MID</TableHead>
+              <TableHead>BOT</TableHead>
+              <TableHead>SUP</TableHead>
+              <TableHead className="w-12">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {summoners.map((summoner) => (
+              <SummonerRow
+                idx={summoners.indexOf(summoner) + 1}
+                key={summoner.id}
+                summoner={summoner}
+                onInputChange={handleInputChange}
+                onToggleSelection={toggleSummonerSelection}
+                onDelete={deleteSummoner}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 };
 
