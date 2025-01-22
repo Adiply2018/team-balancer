@@ -42,6 +42,7 @@ def handle_save_summoners(body: Dict) -> Dict:
             cleaned_summoners.append(cleaned_summoner)
 
         result = storage.save_summoners(cleaned_summoners)
+        log.info(f"Saved summoners data: {json.dumps(result)}")
         return create_response(200, result)
 
     except Exception as e:
@@ -76,7 +77,7 @@ def create_response(status_code: int, body: Any) -> Dict[str, Any]:
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         },
         "body": json.dumps(body),
     }
