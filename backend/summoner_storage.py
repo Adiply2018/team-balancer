@@ -6,6 +6,21 @@ import boto3
 from logger import log
 
 
+def serialize_dynamodb_item(raw_data: Dict) -> Dict:
+    """DynamoDBのデータを通常の型に変換"""
+
+    def _convert(item: Any) -> Any:
+        if isinstance(item, decimal.Decimal):
+            return float(item)
+        elif isinstance(item, dict):
+            return {k: _convert(v) for k, v in item.items()}
+        elif isinstance(item, list):
+            return [_convert(i) for i in item]
+        return item
+
+    return _convert(raw_data)
+
+
 class SummonerStorage:
     def __init__(self):
         self.dynamodb = boto3.resource("dynamodb")
@@ -38,21 +53,19 @@ class SummonerStorage:
             response = self.table.get_item(
                 Key={"passphrase": passphrase}, ConsistentRead=True
             )
-            log.info(f"Loaded summoners data: {response}")
 
             if "Item" not in response:
                 log.error("No item found")
                 return None
 
             item = response["Item"]
-            log.info(f"Loaded item: {item}")
 
             # TTLチェック
             if item["ttl"] < int(time.time()):
                 log.error("Item expired")
                 return None
 
-            return item["summoners"]
+            return serialize_dynamodb_item(item["summoners"])
 
         except Exception as e:
             log.error(f"Error loading summoners: {str(e)}")

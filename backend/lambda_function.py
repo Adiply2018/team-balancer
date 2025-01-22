@@ -1,6 +1,7 @@
+import decimal
 import json
 import traceback
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from balance_logic import (
     Rank,
@@ -61,28 +62,39 @@ def handle_load_summoners(body: Dict) -> Dict:
         if not passphrase:
             return create_response(400, {"error": "No passphrase provided"})
 
+        log.debug(f"Loading summoners data with passphrase: {passphrase}")
+
         summoners = storage.load_summoners(passphrase)
         if summoners is None:
             return create_response(404, {"error": "Invalid or expired passphrase"})
 
-        return create_response(200, {"summoners": summoners})
+        # Decimalを含むデータを通常の数値型に変換してからレスポンスを作成
+        converted_data = {"summoners": summoners}
+        return create_response(200, converted_data)
 
     except Exception as e:
         log.error(f"Error in handle_load_summoners: {traceback.format_exc()}")
         return create_response(500, {"error": str(e)})
 
 
+def decimal_default(obj: Any) -> Union[float, str]:
+    """JSONシリアライズ時のDecimal型の処理"""
+    if isinstance(obj, decimal.Decimal):
+        return float(obj)
+    raise TypeError
+
+
 def create_response(status_code: int, body: Any) -> Dict[str, Any]:
-    """APIGatewayのレスポンス形式を作成"""
+    """APIGatewayのレスポンス形式を作成（CORS対応）"""
     return {
         "statusCode": status_code,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Methods": "POST,OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         },
-        "body": json.dumps(body),
+        "body": json.dumps(body, default=decimal_default),
     }
 
 
