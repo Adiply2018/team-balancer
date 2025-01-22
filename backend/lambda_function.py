@@ -2,8 +2,6 @@ import json
 import traceback
 from typing import Any, Dict
 
-from pydantic import ValidationError
-
 from balance_logic import (
     Rank,
     RoleProficiency,
@@ -12,6 +10,7 @@ from balance_logic import (
     calculate_team_stats,
     normalize_rank_format,
 )
+from pydantic import ValidationError
 from riot_api import get_summoners_data
 
 
@@ -118,6 +117,8 @@ def lambda_handler(event: Dict, context: Any) -> Dict:
             return handle_summoners_request(body)
         elif path == "/api/balance-teams":
             return handle_balance_teams_request(body)
+        elif path == "/api/health":
+            return create_response(200, {"status": "ok"})
         else:
             return create_response(404, {"error": "Not Found"})
 
