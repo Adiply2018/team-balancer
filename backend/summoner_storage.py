@@ -22,18 +22,8 @@ class SummonerStorage:
         ) + string.digits.replace("0", "").replace("1", "")
         return "".join(random.choices(characters, k=length))
 
-    def save_summoners(self, summoners: List[Dict]) -> Dict[str, str]:
+    def save_summoners(self, summoners: List[Dict], passphrase: str) -> Dict[str, str]:
         """サモナー情報を保存し、合言葉を返す"""
-        # 合言葉を生成（既存の合言葉と重複しないようにチェック）
-        while True:
-            passphrase = self._generate_passphrase()
-            log.debug(f"Generated passphrase: {passphrase}")
-            try:
-                self.table.get_item(Key={"passphrase": passphrase}, ConsistentRead=True)
-                log.debug("Passphrase already exists. Regenerating...")
-            except self.dynamodb.meta.client.exceptions.ResourceNotFoundException:
-                break
-
         expiration_time = int(
             (datetime.now() + timedelta(days=self.expiration_days)).timestamp()
         )

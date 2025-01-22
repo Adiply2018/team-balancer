@@ -41,7 +41,9 @@ def handle_save_summoners(body: Dict) -> Dict:
             }
             cleaned_summoners.append(cleaned_summoner)
 
-        result = storage.save_summoners(cleaned_summoners)
+        result = storage.save_summoners(
+            cleaned_summoners, passphrase=body.get("passphrase")
+        )
         log.info(f"Saved summoners data: {json.dumps(result)}")
         return create_response(200, result)
 
