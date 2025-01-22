@@ -10,6 +10,7 @@ from balance_logic import (
     calculate_team_stats,
     normalize_rank_format,
 )
+from logger import log
 from pydantic import ValidationError
 from riot_api import get_summoners_data
 from summoner_storage import SummonerStorage
@@ -21,7 +22,7 @@ def handle_save_summoners(body: Dict) -> Dict:
         storage = SummonerStorage()
         summoners = body.get("summoners", [])
 
-        print("Received summoners data:", json.dumps(summoners))
+        log.info(f"Received summoners data: {json.dumps(summoners)}")
 
         if not summoners:
             return create_response(400, {"error": "No summoner data provided"})
@@ -44,8 +45,8 @@ def handle_save_summoners(body: Dict) -> Dict:
         return create_response(200, result)
 
     except Exception as e:
-        print(f"Error in handle_save_summoners: {str(e)}")
-        print(traceback.format_exc())  # スタックトレースを出力
+        log.error(f"Error in handle_save_summoners: {str(e)}")
+        log.error(traceback.format_exc())  # スタックトレースを出力
         return create_response(500, {"error": str(e)})
 
 
