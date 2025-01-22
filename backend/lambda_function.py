@@ -12,6 +12,40 @@ from balance_logic import (
 )
 from pydantic import ValidationError
 from riot_api import get_summoners_data
+from summoner_storage import SummonerStorage
+
+
+def handle_save_summoners(body: Dict) -> Dict:
+    """サモナー情報を保存するハンドラー"""
+    try:
+        storage = SummonerStorage()
+        summoners = body.get("summoners", [])
+        if not summoners:
+            return create_response(400, {"error": "No summoner data provided"})
+
+        result = storage.save_summoners(summoners)
+        return create_response(200, result)
+
+    except Exception as e:
+        return create_response(500, {"error": str(e)})
+
+
+def handle_load_summoners(body: Dict) -> Dict:
+    """サモナー情報を読み込むハンドラー"""
+    try:
+        storage = SummonerStorage()
+        passphrase = body.get("passphrase")
+        if not passphrase:
+            return create_response(400, {"error": "No passphrase provided"})
+
+        summoners = storage.load_summoners(passphrase)
+        if summoners is None:
+            return create_response(404, {"error": "Invalid or expired passphrase"})
+
+        return create_response(200, {"summoners": summoners})
+
+    except Exception as e:
+        return create_response(500, {"error": str(e)})
 
 
 def create_response(status_code: int, body: Any) -> Dict[str, Any]:
@@ -120,6 +154,10 @@ def lambda_handler(event: Dict, context: Any) -> Dict:
             return handle_summoners_request(body)
         elif path == "/api/balance-teams":
             return handle_balance_teams_request(body)
+        elif path == "/api/save-summoners":
+            return handle_save_summoners(body)
+        elif path == "/api/load-summoners":
+            return handle_load_summoners(body)
         elif path == "/api/health":
             return create_response(200, {"status": "ok"})
         else:
@@ -128,4 +166,4 @@ def lambda_handler(event: Dict, context: Any) -> Dict:
     except json.JSONDecodeError:
         return create_response(400, {"error": "Invalid JSON"})
     except Exception as e:
-        return create_response(500, {"error": str(e), "detail": traceback.format_exc()})
+        return create_response(500, {"error": str(e)})
