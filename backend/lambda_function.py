@@ -103,16 +103,19 @@ def handle_balance_teams_request(body: Dict) -> Dict:
 
 def lambda_handler(event: Dict, context: Any) -> Dict:
     """Lambda関数のメインハンドラー"""
-    # プリフライトリクエストの処理
     if event.get("httpMethod") == "OPTIONS":
         return create_response(200, {"message": "OK"})
 
     try:
-        # リクエストボディの解析
-        body = json.loads(event.get("body", "{}"))
+        try:
+            body = json.loads(event.get("body", "{}"))
+        except json.JSONDecodeError:
+            body = {}
+        except TypeError:
+            body = {}
+
         path = event.get("path", "")
 
-        # パスに応じたハンドラーの呼び出し
         if path == "/api/summoners":
             return handle_summoners_request(body)
         elif path == "/api/balance-teams":
