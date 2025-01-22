@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 import boto3
+from logger import log
 
 
 class SummonerStorage:
@@ -26,18 +27,19 @@ class SummonerStorage:
         # 合言葉を生成（既存の合言葉と重複しないようにチェック）
         while True:
             passphrase = self._generate_passphrase()
+            log.debug(f"Generated passphrase: {passphrase}")
             try:
                 self.table.get_item(Key={"passphrase": passphrase}, ConsistentRead=True)
+                log.debug("Passphrase already exists. Regenerating...")
             except self.dynamodb.meta.client.exceptions.ResourceNotFoundException:
                 break
 
-        # TTLを計算（2週間後）
         expiration_time = int(
             (datetime.now() + timedelta(days=self.expiration_days)).timestamp()
         )
 
         # データを保存
-        self.table.put_item(
+        result = self.table.put_item(
             Item={
                 "passphrase": passphrase,
                 "summoners": summoners,
@@ -45,6 +47,7 @@ class SummonerStorage:
                 "ttl": expiration_time,
             }
         )
+        log.info(f"Saved summoners data: {result}")
 
         return {"passphrase": passphrase, "expiresAt": expiration_time}
 

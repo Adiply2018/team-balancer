@@ -7,7 +7,6 @@ from typing import Dict, List, Optional, Tuple
 
 import boto3
 import requests
-
 from ddragon import ChampionIconGenerator
 
 
@@ -23,7 +22,7 @@ class RiotAPI:
         self.cache_table = self.dynamodb.Table(
             os.environ.get("DYNAMODB_CACHE_TABLE", "riot-api-cache")
         )
-        self.cache_duration = timedelta(hours=24 * 7)  # キャッシュの有効期限
+        self.cache_duration = timedelta(hours=24 * 3)  # キャッシュの有効期限
 
         self.ddragon_version = self.get_ddragon_version()
         self.ddragon = ChampionIconGenerator()
