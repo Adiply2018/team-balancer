@@ -20,13 +20,32 @@ def handle_save_summoners(body: Dict) -> Dict:
     try:
         storage = SummonerStorage()
         summoners = body.get("summoners", [])
+
+        print("Received summoners data:", json.dumps(summoners))
+
         if not summoners:
             return create_response(400, {"error": "No summoner data provided"})
 
-        result = storage.save_summoners(summoners)
+        # 不要なフィールドの削除とデータの整形
+        cleaned_summoners = []
+        for summoner in summoners:
+            cleaned_summoner = {
+                "name": summoner.get("name"),
+                "icon": summoner.get("icon"),
+                "level": summoner.get("level"),
+                "rank": summoner.get("rank"),
+                "roleProficiency": summoner.get("roleProficiency"),
+                "top3Champs": summoner.get("top3Champs", []),
+                "isSelected": summoner.get("isSelected", True),
+            }
+            cleaned_summoners.append(cleaned_summoner)
+
+        result = storage.save_summoners(cleaned_summoners)
         return create_response(200, result)
 
     except Exception as e:
+        print(f"Error in handle_save_summoners: {str(e)}")
+        print(traceback.format_exc())  # スタックトレースを出力
         return create_response(500, {"error": str(e)})
 
 
