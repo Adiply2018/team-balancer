@@ -38,6 +38,7 @@ class SummonerStorage:
             response = self.table.get_item(
                 Key={"passphrase": passphrase}, ConsistentRead=True
             )
+            log.info(f"Loaded summoners data: {response}")
 
             if "Item" not in response:
                 return None
