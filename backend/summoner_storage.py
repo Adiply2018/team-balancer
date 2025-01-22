@@ -1,12 +1,13 @@
+import decimal
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import boto3
 from logger import log
 
 
-def serialize_dynamodb_item(raw_data: Dict) -> Dict:
+def serialize_dynamodb_item(raw_data: Any) -> Any:
     """DynamoDBのデータを通常の型に変換"""
 
     def _convert(item: Any) -> Any:
@@ -27,7 +28,9 @@ class SummonerStorage:
         self.table = self.dynamodb.Table("summoner-storage")
         self.expiration_days = 14  # 2週間
 
-    def save_summoners(self, summoners: List[Dict], passphrase: str) -> Dict[str, str]:
+    def save_summoners(
+        self, summoners: List[Dict], passphrase: str
+    ) -> Dict[str, str | int]:
         """サモナー情報を保存し、合言葉を返す"""
         expiration_time = int(
             (datetime.now() + timedelta(days=self.expiration_days)).timestamp()
