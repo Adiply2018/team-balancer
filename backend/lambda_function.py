@@ -32,6 +32,7 @@ def handle_save_summoners(body: Dict) -> Dict:
         cleaned_summoners = []
         for summoner in summoners:
             cleaned_summoner = {
+                "id": summoner.get("id"),
                 "name": summoner.get("name"),
                 "icon": summoner.get("icon"),
                 "level": summoner.get("level"),
