@@ -68,6 +68,7 @@ def handle_load_summoners(body: Dict) -> Dict:
         return create_response(200, {"summoners": summoners})
 
     except Exception as e:
+        log.error(f"Error in handle_load_summoners: {traceback.format_exc()}")
         return create_response(500, {"error": str(e)})
 
 

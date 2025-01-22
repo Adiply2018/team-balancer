@@ -41,12 +41,15 @@ class SummonerStorage:
             log.info(f"Loaded summoners data: {response}")
 
             if "Item" not in response:
+                log.error("No item found")
                 return None
 
             item = response["Item"]
+            log.info(f"Loaded item: {item}")
 
             # TTLチェック
             if item["ttl"] < int(time.time()):
+                log.error("Item expired")
                 return None
 
             return item["summoners"]
