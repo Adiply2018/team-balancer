@@ -48,15 +48,24 @@ const TeamResults = ({
   if (teamA.length === 0 && teamB.length === 0) return null;
   const formatDiscordText = () => {
     const formatTeam = (team: Summoner[], stats: TeamStats) => {
+      const roleEmojis = {
+        TOP: "🛡️",
+        JUNGLE: "🌳",
+        MID: "⚔️",
+        BOT: "🏹",
+        SUPPORT: "💚",
+      };
+
       const playerLines = team
         .map((s) => {
           const rankInfo = RANKS.find((r) => r.value === s.rank.combined);
+          const assignedRoleIcon = s.assignedRole ? `${roleEmojis[s.assignedRole]} ` : "";
           const roles = Object.entries(s.roleProficiency)
             .filter(([_, value]) => value > 2)
             .map(([role]) => role)
             .join("/");
 
-          return `• ${s.name} - ${rankInfo?.label || "Unranked"}${roles ? ` (${roles})` : ""}`;
+          return `${assignedRoleIcon}• ${s.name} - ${rankInfo?.label || "Unranked"}${roles ? ` (${roles})` : ""}`;
         })
         .join("\n");
 
@@ -226,6 +235,22 @@ ${formatTeam(teamB, teamBStats)}
                       )}
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
+                          {summoner.assignedRole && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <img
+                                    src={laneIcons[summoner.assignedRole]}
+                                    alt={summoner.assignedRole}
+                                    className="w-6 h-6 border-2 border-primary rounded"
+                                  />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  割り当てロール: {summoner.assignedRole}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                           <span className="text-sm font-medium">
                             {summoner.name}
                           </span>
@@ -245,7 +270,7 @@ ${formatTeam(teamB, teamBStats)}
                             {Object.entries(summoner.roleProficiency)
                               .filter(([_, value]) => value > 2)
                               .map(([role, value]) => (
-                                <TooltipProvider>
+                                <TooltipProvider key={`${summoner.id}-${role}`}>
                                   <Tooltip>
                                     <TooltipTrigger>
                                       <img

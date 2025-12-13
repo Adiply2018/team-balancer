@@ -22,6 +22,8 @@ export type Summoner = {
   roleProficiency: RoleProficiency;
   top3Champs?: ChampInfo[];
   isSelected: boolean;
+  preferredRoles?: Role[]; // 希望ロール（複数選択可能）
+  assignedRole?: Role; // 割り当てられたロール
 };
 
 export interface ChampionStats {

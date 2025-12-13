@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Trash2 } from "lucide-react";
+import { Trash2, Star } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -19,6 +19,19 @@ import {
 import { RANKS, type Summoner, type Role } from "./types";
 import opggIcon from "../../assets/opgg-icon.png";
 import deeplolIcon from "../../assets/deeplol-icon.png";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import TOP_ICON from "@/assets/Top_icon.webp";
+import JUNGLE_ICON from "@/assets/Jungle_icon.webp";
+import MID_ICON from "@/assets/Middle_icon.webp";
+import BOT_ICON from "@/assets/Bottom_icon.webp";
+import SUPPORT_ICON from "@/assets/Support_icon.webp";
 
 type SummonerRowProps = {
   idx: number;
@@ -37,6 +50,14 @@ const roleLevelColors: Record<number, string> = {
   5: "text-blue-500",
 };
 
+const laneIcons = {
+  TOP: TOP_ICON,
+  JUNGLE: JUNGLE_ICON,
+  MID: MID_ICON,
+  BOT: BOT_ICON,
+  SUPPORT: SUPPORT_ICON,
+};
+
 export const SummonerRow = React.memo(
   ({
     idx,
@@ -45,10 +66,22 @@ export const SummonerRow = React.memo(
     onToggleSelection,
     onDelete,
   }: SummonerRowProps) => {
+    const [isPreferredRolesOpen, setIsPreferredRolesOpen] = useState(false);
+
     // サモナー名から name#tag を分離
     const [summonerName, summonerTag] = summoner.name.includes('#')
       ? summoner.name.split('#')
       : [summoner.name, summoner.tag || ''];
+
+    const roles: Role[] = ["TOP", "JUNGLE", "MID", "BOT", "SUPPORT"];
+
+    const togglePreferredRole = (role: Role) => {
+      const currentPreferred = summoner.preferredRoles || [];
+      const newPreferred = currentPreferred.includes(role)
+        ? currentPreferred.filter((r) => r !== role)
+        : [...currentPreferred, role];
+      onInputChange(summoner.id, "preferredRoles", newPreferred);
+    };
 
     return (
       <TableRow
@@ -218,6 +251,52 @@ export const SummonerRow = React.memo(
             </Select>
           </TableCell>
         ))}
+        <TableCell>
+          <Dialog open={isPreferredRolesOpen} onOpenChange={setIsPreferredRolesOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 px-2">
+                <Star className={`h-4 w-4 ${summoner.preferredRoles && summoner.preferredRoles.length > 0 ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                {summoner.preferredRoles && summoner.preferredRoles.length > 0 && (
+                  <span className="ml-1 text-xs">{summoner.preferredRoles.length}</span>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>希望ロール選択</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 py-4">
+                <p className="text-sm text-muted-foreground">
+                  希望するロールを選択してください（複数選択可）
+                </p>
+                {roles.map((role) => {
+                  const isSelected = summoner.preferredRoles?.includes(role) || false;
+                  return (
+                    <div
+                      key={role}
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-secondary cursor-pointer"
+                      onClick={() => togglePreferredRole(role)}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => togglePreferredRole(role)}
+                      />
+                      <img
+                        src={laneIcons[role]}
+                        alt={role}
+                        className="w-8 h-8"
+                      />
+                      <span className="font-medium">{role}</span>
+                      <Badge variant="outline" className="ml-auto">
+                        Lv.{summoner.roleProficiency[role]}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </TableCell>
         <TableCell>
           <Button
             variant="ghost"

@@ -45,6 +45,8 @@ const createEmptySummoner = (id: string): Summoner => ({
   },
   top3Champs: [],
   isSelected: false,
+  preferredRoles: [],
+  assignedRole: undefined,
 });
 
 const TeamBalancer = () => {
@@ -165,6 +167,11 @@ const TeamBalancer = () => {
                 tier,
                 division: division || "",
               },
+            };
+          } else if (field === "preferredRoles") {
+            return {
+              ...summoner,
+              preferredRoles: value,
             };
           } else {
             const role = field.split("_")[1] as Role;
@@ -550,6 +557,7 @@ const TeamBalancer = () => {
               <TableHead>MID</TableHead>
               <TableHead>BOT</TableHead>
               <TableHead>SUP</TableHead>
+              <TableHead className="w-16">希望</TableHead>
               <TableHead className="w-12">操作</TableHead>
             </TableRow>
           </TableHeader>

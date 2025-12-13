@@ -21,6 +21,8 @@ class Summoner(BaseModel):
     rank: Rank
     roleProficiency: RoleProficiency
     isSelected: bool = True
+    preferredRoles: List[str] = []  # 希望ロール
+    assignedRole: str = None  # 割り当てられたロール
 
 class ChampionStats(BaseModel):
     championName: str
@@ -229,3 +231,71 @@ def normalize_rank_format(summoners: List[Summoner]) -> List[Summoner]:
             summoner.rank.combined = combined
 
     return summoners
+
+def assign_roles_to_team(team: List[Summoner]) -> List[Summoner]:
+    """チームメンバーにロールを割り当て（線形計画法）"""
+    if len(team) != 5:
+        raise ValueError("Team must have exactly 5 members")
+
+    roles = ["TOP", "JUNGLE", "MID", "BOT", "SUPPORT"]
+    n_players = len(team)
+
+    # 線形計画問題の設定
+    prob = pulp.LpProblem("RoleAssignment", pulp.LpMaximize)
+
+    # 変数定義: x[i, j] = プレイヤーiがロールjに割り当てられるか（0 or 1）
+    x = pulp.LpVariable.dicts(
+        "assignment",
+        ((i, j) for i in range(n_players) for j in range(5)),
+        cat="Binary"
+    )
+
+    # スコア計算関数
+    def get_assignment_score(player_idx: int, role_idx: int) -> float:
+        """プレイヤーとロールの組み合わせのスコアを計算"""
+        player = team[player_idx]
+        role = roles[role_idx]
+
+        # ベーススコア: ロール熟練度
+        base_score = getattr(player.roleProficiency, role)
+
+        # 希望ロールボーナス
+        preference_bonus = 0
+        if player.preferredRoles and role in player.preferredRoles:
+            # 希望ロールの場合、大きなボーナス
+            preference_bonus = 10
+        elif player.preferredRoles and len(player.preferredRoles) > 0:
+            # 希望ロールがあるが該当しない場合、ペナルティ
+            preference_bonus = -5
+
+        return base_score + preference_bonus
+
+    # 制約条件1: 各プレイヤーは1つのロールのみ
+    for i in range(n_players):
+        prob += pulp.lpSum(x[i, j] for j in range(5)) == 1
+
+    # 制約条件2: 各ロールに1人のみ
+    for j in range(5):
+        prob += pulp.lpSum(x[i, j] for i in range(n_players)) == 1
+
+    # 目的関数: 総スコアを最大化
+    prob += pulp.lpSum(
+        get_assignment_score(i, j) * x[i, j]
+        for i in range(n_players)
+        for j in range(5)
+    )
+
+    # 最適化問題を解く
+    prob.solve(pulp.PULP_CBC_CMD(msg=0))
+
+    # 結果を適用
+    assigned_team = []
+    for i in range(n_players):
+        player = team[i]
+        for j in range(5):
+            if pulp.value(x[i, j]) == 1:
+                player.assignedRole = roles[j]
+                break
+        assigned_team.append(player)
+
+    return assigned_team

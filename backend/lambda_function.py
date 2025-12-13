@@ -10,6 +10,7 @@ from balance_logic import (
     balance_teams,
     calculate_team_stats,
     normalize_rank_format,
+    assign_roles_to_team,
 )
 from logger import log
 from pydantic import ValidationError
@@ -48,6 +49,7 @@ def handle_save_summoners(body: Dict) -> Dict:
                 "roleProficiency": summoner.get("roleProficiency"),
                 "top3Champs": summoner.get("top3Champs", []),
                 "isSelected": summoner.get("isSelected", True),
+                "preferredRoles": summoner.get("preferredRoles", []),
             }
             cleaned_summoners.append(cleaned_summoner)
 
@@ -149,6 +151,7 @@ def handle_balance_teams_request(body: Dict) -> Dict:
                     SUPPORT=role_data.get("SUPPORT", 0),
                 ),
                 isSelected=s.get("isSelected", True),
+                preferredRoles=s.get("preferredRoles", []),
             )
             summoners.append(summoner)
 
@@ -159,6 +162,10 @@ def handle_balance_teams_request(body: Dict) -> Dict:
 
         # チーム分け実行
         team_a, team_b = balance_teams(normalized_summoners, randomness)
+
+        # ロール割り当て実行
+        team_a = assign_roles_to_team(team_a)
+        team_b = assign_roles_to_team(team_b)
 
         # 各チームの統計を計算
         team_a_stats = calculate_team_stats(team_a)
