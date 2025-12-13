@@ -285,6 +285,7 @@ ${formatTeam(teamB, teamBStats)}
                               (r) => r.value === summoner.rank.combined,
                             )?.label || summoner.rank.combined}
                           </Badge>
+
                           <div className="flex gap-2 text-sm text-muted-foreground">
                             {Object.entries(summoner.roleProficiency)
                               .filter(([_, value]) => value > 2)
