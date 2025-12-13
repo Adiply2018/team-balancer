@@ -156,6 +156,13 @@ export const SummonerRow = React.memo(
                     </span>
                   </SelectItem>
                 ))}
+                <div className="px-2 py-1.5 text-xs text-muted-foreground border-t mt-1 pointer-events-none">
+                  0:ほぼやらない ～ 5:よくやる
+                  <br />
+                  ※サモナー情報を取得で、
+                  <br />
+                  直近20試合から自動判定
+                </div>
               </SelectContent>
             </Select>
           </TableCell>

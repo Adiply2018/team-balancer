@@ -186,7 +186,7 @@ ${formatTeam(teamB, teamBStats)}
                 </HoverCard>
               </div>
               <div className="mt-4 flex gap-2 text-xs text-muted-foreground">
-                <p className="text-xs">ロール分布</p>
+                <p className="text-xs">得意ロール分布</p>
                 {ROLE_ORDER.map((role) => (
                   <div
                     key={`role-${role}-${team}`}
