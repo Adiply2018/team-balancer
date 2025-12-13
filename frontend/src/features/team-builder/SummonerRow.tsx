@@ -245,7 +245,7 @@ export const SummonerRow = React.memo(
                   <br />
                   ※サモナー情報を取得で、
                   <br />
-                  直近20試合から自動判定
+                  直近10試合から自動判定
                 </div>
               </SelectContent>
             </Select>

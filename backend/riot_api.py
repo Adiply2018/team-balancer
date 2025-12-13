@@ -207,7 +207,7 @@ class RiotAPI:
                     rank_info["FLEX"] = rank_data["tier"] + " " + rank_data["rank"]
 
             # マッチヒストリーを取得
-            match_count = 20
+            match_count = 10
             match_history = self.get_match_history(
                 puuid, match_type="ranked", count=match_count
             )
