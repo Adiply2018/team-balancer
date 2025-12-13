@@ -62,12 +62,12 @@ const TeamResults = ({
   if (teamA.length === 0 && teamB.length === 0) return null;
   const formatDiscordText = () => {
     const formatTeam = (team: Summoner[], stats: TeamStats) => {
-      const roleEmojis = {
-        TOP: "🛡️",
-        JUNGLE: "🌳",
-        MID: "⚔️",
-        BOT: "🏹",
-        SUPPORT: "💚",
+      const roleLabels = {
+        TOP: "TOP",
+        JUNGLE: "JG",
+        MID: "MID",
+        BOT: "BOT",
+        SUPPORT: "SUP",
       };
 
       // ロール順にソート
@@ -76,15 +76,15 @@ const TeamResults = ({
       const playerLines = sortedTeam
         .map((s) => {
           const rankInfo = RANKS.find((r) => r.value === s.rank.combined);
-          const assignedRoleIcon = s.assignedRole
-            ? `${roleEmojis[s.assignedRole]} `
+          const assignedRoleLabel = s.assignedRole
+            ? `[${roleLabels[s.assignedRole]}] `
             : "";
           const roles = Object.entries(s.roleProficiency)
             .filter(([_, value]) => value > 2)
             .map(([role]) => role)
             .join("/");
 
-          return `${assignedRoleIcon}• ${s.name} - ${rankInfo?.label || "Unranked"}${roles ? ` (${roles})` : ""}`;
+          return `${assignedRoleLabel}${s.name} - ${rankInfo?.label || "Unranked"}${roles ? ` (${roles})` : ""}`;
         })
         .join("\n");
 
