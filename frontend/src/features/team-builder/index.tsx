@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Swords, Users, Plus, Settings, Info } from "lucide-react";
+import { Swords, Users, Plus, Settings, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SummonerRow } from "./SummonerRow";
 import { type Summoner, type Role, RANKS } from "./types";
@@ -25,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 
 let idCounter = 1;
 const generateId = () => `sid_${String(idCounter++).padStart(2, "0")}`;
@@ -49,7 +50,8 @@ const createEmptySummoner = (id: string): Summoner => ({
 const TeamBalancer = () => {
   const [summoners, setSummoners] = useState<Summoner[]>([]);
   const [lobbyInput, setLobbyInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isFetchingData, setIsFetchingData] = useState(false);
+  const [isBalancingTeams, setIsBalancingTeams] = useState(false);
   const [newSummonerName, setNewSummonerName] = useState("");
   const [teamA, setTeamA] = useState<Summoner[]>([]);
   const [teamB, setTeamB] = useState<Summoner[]>([]);
@@ -59,6 +61,8 @@ const TeamBalancer = () => {
   const [showFireworks, setShowFireworks] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [fetchProgress, setFetchProgress] = useState(0);
+  const [currentFetchingPlayer, setCurrentFetchingPlayer] = useState("");
 
   const selectedCount = useMemo(
     () => summoners.filter((s) => s.isSelected).length,
@@ -189,25 +193,51 @@ const TeamBalancer = () => {
       return;
     }
 
-    setLoading(true);
+    setIsFetchingData(true);
+    setFetchProgress(0);
+    setCurrentFetchingPlayer("");
+
     try {
-      const response = await fetch(
-        "https://2hkuubvqk5.execute-api.ap-northeast-1.amazonaws.com/prod/api/summoners",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            summonerNames: selectedSummoners.map((s) => s.name),
-          }),
-        },
-      );
+      const totalPlayers = selectedSummoners.length;
+      const fetchedData: any[] = [];
 
-      if (!response.ok) throw new Error("APIリクエストに失敗しました");
+      // 各サモナーを個別に取得
+      for (let i = 0; i < selectedSummoners.length; i++) {
+        const summoner = selectedSummoners[i];
+        setCurrentFetchingPlayer(summoner.name);
+        setFetchProgress(Math.round((i / totalPlayers) * 100));
 
-      const data = await response.json();
+        try {
+          const response = await fetch(
+            "https://2hkuubvqk5.execute-api.ap-northeast-1.amazonaws.com/prod/api/summoners",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                summonerNames: [summoner.name],
+              }),
+            },
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.length > 0) {
+              fetchedData.push(data[0]);
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching ${summoner.name}:`, error);
+        }
+      }
+
+      // 完了
+      setFetchProgress(100);
+      setCurrentFetchingPlayer("");
+
+      // データを更新
       setSummoners((prev) =>
         prev.map((summoner) => {
-          const updatedData = data.find(
+          const updatedData = fetchedData.find(
             (d) => d.summoner_info.name === summoner.name,
           );
           if (!updatedData) return summoner;
@@ -242,8 +272,11 @@ const TeamBalancer = () => {
     } catch (error) {
       console.error("Error fetching summoner data:", error);
       toast.error("サモナー情報の取得に失敗しました。");
+    } finally {
+      setIsFetchingData(false);
+      setFetchProgress(0);
+      setCurrentFetchingPlayer("");
     }
-    setLoading(false);
   }, [summoners]);
 
   const balanceTeams = useCallback(async () => {
@@ -256,7 +289,7 @@ const TeamBalancer = () => {
 
     const updatedSummoners = selectedSummoners;
 
-    setLoading(true);
+    setIsBalancingTeams(true);
     try {
       const response = await fetch(
         "https://2hkuubvqk5.execute-api.ap-northeast-1.amazonaws.com/prod/api/balance-teams",
@@ -298,7 +331,7 @@ const TeamBalancer = () => {
       console.error("Error balancing teams:", error);
       toast.error("チーム分けに失敗しました。");
     }
-    setLoading(false);
+    setIsBalancingTeams(false);
   }, [summoners, randomness]);
 
   const handleLoadSummoners = useCallback((loadedSummoners: Summoner[]) => {
@@ -426,23 +459,50 @@ const TeamBalancer = () => {
           teamBStats={teamBStats}
         />
 
+        {isFetchingData && fetchProgress > 0 && (
+          <div className="mb-4 p-4 border rounded-lg bg-secondary/50">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">
+                サモナー情報取得中...
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {fetchProgress}%
+              </span>
+            </div>
+            <Progress value={fetchProgress} className="h-2 mb-2" />
+            {currentFetchingPlayer && (
+              <p className="text-xs text-muted-foreground">
+                取得中: {currentFetchingPlayer}
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
           <div className="flex flex-col gap-4 sm:flex-row sm:gap-2">
             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row">
               <Button
                 onClick={fetchSummonersData}
-                disabled={loading || selectedCount === 0}
+                disabled={isFetchingData || isBalancingTeams || selectedCount === 0}
                 variant="secondary"
               >
-                <Users className="mr-2 h-4 w-4" />
+                {isFetchingData ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Users className="mr-2 h-4 w-4" />
+                )}
                 サモナー情報を取得
               </Button>
               <Button
                 onClick={balanceTeams}
-                disabled={loading || selectedCount !== 10}
+                disabled={isFetchingData || isBalancingTeams || selectedCount !== 10}
                 variant="secondary"
               >
-                <Swords className="mr-2 h-4 w-4" />
+                {isBalancingTeams ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Swords className="mr-2 h-4 w-4" />
+                )}
                 チームを分ける ({
                   selectedCount
                 }/10)
