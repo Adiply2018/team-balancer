@@ -31,6 +31,20 @@ type TeamResultsProps = {
 
 const ROLE_ORDER = ["TOP", "JUNGLE", "MID", "BOT", "SUPPORT"];
 
+const sortTeamByRole = (team: Summoner[]): Summoner[] => {
+  return [...team].sort((a, b) => {
+    // assignedRoleがない場合は最後に配置
+    if (!a.assignedRole && !b.assignedRole) return 0;
+    if (!a.assignedRole) return 1;
+    if (!b.assignedRole) return -1;
+
+    // ロール順でソート
+    const indexA = ROLE_ORDER.indexOf(a.assignedRole);
+    const indexB = ROLE_ORDER.indexOf(b.assignedRole);
+    return indexA - indexB;
+  });
+};
+
 const laneIcons = {
   TOP: TOP_ICON,
   JUNGLE: JUNGLE_ICON,
@@ -56,10 +70,15 @@ const TeamResults = ({
         SUPPORT: "💚",
       };
 
-      const playerLines = team
+      // ロール順にソート
+      const sortedTeam = sortTeamByRole(team);
+
+      const playerLines = sortedTeam
         .map((s) => {
           const rankInfo = RANKS.find((r) => r.value === s.rank.combined);
-          const assignedRoleIcon = s.assignedRole ? `${roleEmojis[s.assignedRole]} ` : "";
+          const assignedRoleIcon = s.assignedRole
+            ? `${roleEmojis[s.assignedRole]} `
+            : "";
           const roles = Object.entries(s.roleProficiency)
             .filter(([_, value]) => value > 2)
             .map(([role]) => role)
@@ -118,8 +137,8 @@ ${formatTeam(teamB, teamBStats)}
 
       <div className="grid grid-cols-2 gap-2">
         {[
-          { title: "チームA", team: teamA, stats: teamAStats },
-          { title: "チームB", team: teamB, stats: teamBStats },
+          { title: "チームA", team: sortTeamByRole(teamA), stats: teamAStats },
+          { title: "チームB", team: sortTeamByRole(teamB), stats: teamBStats },
         ].map(({ title, team, stats }) => (
           <Card
             key={`team-${title}`}
@@ -242,7 +261,7 @@ ${formatTeam(teamB, teamBStats)}
                                   <img
                                     src={laneIcons[summoner.assignedRole]}
                                     alt={summoner.assignedRole}
-                                    className="w-6 h-6 border-2 border-primary rounded"
+                                    className="w-6 h-6"
                                   />
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -276,7 +295,7 @@ ${formatTeam(teamB, teamBStats)}
                                       <img
                                         src={laneIcons[role]}
                                         alt={role}
-                                        className="w-4 h-4"
+                                        className="w-4 h-4 opacity-30 hover:opacity-100 transition"
                                       />
                                     </TooltipTrigger>
                                     <TooltipContent>

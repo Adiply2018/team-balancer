@@ -19,6 +19,8 @@ import { Slider } from "@/components/ui/slider";
 import { FireworksDisplay } from "@/components/ui/fireworks";
 import ThemeSwitcher from "@/components/theme-toggle";
 import { SummonerStorage } from "./SummonerStorage";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -65,6 +67,7 @@ const TeamBalancer = () => {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [fetchProgress, setFetchProgress] = useState(0);
   const [currentFetchingPlayer, setCurrentFetchingPlayer] = useState("");
+  const [autoAssignRoles, setAutoAssignRoles] = useState(true);
 
   const selectedCount = useMemo(
     () => summoners.filter((s) => s.isSelected).length,
@@ -306,6 +309,7 @@ const TeamBalancer = () => {
           body: JSON.stringify({
             summoners: updatedSummoners,
             randomness: randomness[0],
+            autoAssignRoles: autoAssignRoles,
           }),
         },
       );
@@ -469,9 +473,7 @@ const TeamBalancer = () => {
         {isFetchingData && fetchProgress > 0 && (
           <div className="mb-4 p-4 border rounded-lg bg-secondary/50">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium">
-                サモナー情報取得中...
-              </span>
+              <span className="text-sm font-medium">サモナー情報取得中...</span>
               <span className="text-sm text-muted-foreground">
                 {fetchProgress}%
               </span>
@@ -490,7 +492,9 @@ const TeamBalancer = () => {
             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row">
               <Button
                 onClick={fetchSummonersData}
-                disabled={isFetchingData || isBalancingTeams || selectedCount === 0}
+                disabled={
+                  isFetchingData || isBalancingTeams || selectedCount === 0
+                }
                 variant="secondary"
               >
                 {isFetchingData ? (
@@ -502,7 +506,9 @@ const TeamBalancer = () => {
               </Button>
               <Button
                 onClick={balanceTeams}
-                disabled={isFetchingData || isBalancingTeams || selectedCount !== 10}
+                disabled={
+                  isFetchingData || isBalancingTeams || selectedCount !== 10
+                }
                 variant="secondary"
               >
                 {isBalancingTeams ? (
@@ -510,10 +516,22 @@ const TeamBalancer = () => {
                 ) : (
                   <Swords className="mr-2 h-4 w-4" />
                 )}
-                チームを分ける ({
-                  selectedCount
-                }/10)
+                チームを分ける ({selectedCount}/10)
               </Button>
+            </div>
+
+            <div className="flex items-center space-x-2 mr-2">
+              <Switch
+                id="auto-assign-roles"
+                checked={autoAssignRoles}
+                onCheckedChange={setAutoAssignRoles}
+              />
+              <Label
+                htmlFor="auto-assign-roles"
+                className="text-xs cursor-pointer"
+              >
+                レーン自動割り当て
+              </Label>
             </div>
 
             <div className="col-span-2 sm:col-span-1">

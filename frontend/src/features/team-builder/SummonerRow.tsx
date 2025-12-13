@@ -268,6 +268,7 @@ export const SummonerRow = React.memo(
               <div className="space-y-3 py-4">
                 <p className="text-sm text-muted-foreground">
                   希望するロールを選択してください（複数選択可）
+                  ※チーム分けには影響しません
                 </p>
                 {roles.map((role) => {
                   const isSelected = summoner.preferredRoles?.includes(role) || false;
