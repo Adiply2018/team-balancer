@@ -286,26 +286,31 @@ ${formatTeam(teamB, teamBStats)}
                             )?.label || summoner.rank.combined}
                           </Badge>
 
-                          <div className="flex gap-2 text-sm text-muted-foreground">
-                            {Object.entries(summoner.roleProficiency)
-                              .filter(([_, value]) => value > 2)
-                              .map(([role, value]) => (
-                                <TooltipProvider key={`${summoner.id}-${role}`}>
-                                  <Tooltip>
-                                    <TooltipTrigger>
+                          <TooltipProvider key={`${summoner.id}`}>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <div className="flex gap-2 text-sm text-muted-foreground opacity-30 hover:opacity-100 transition">
+                                  {Object.entries(summoner.roleProficiency)
+                                    .filter(([_, value]) => value > 2)
+                                    .map(([role, value]) => (
                                       <img
+                                        key={role}
                                         src={laneIcons[role]}
                                         alt={role}
-                                        className="w-4 h-4 opacity-30 hover:opacity-100 transition"
+                                        className="w-4 h-4"
                                       />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      得意ロール {role}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              ))}
-                          </div>
+                                    ))}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                得意ロール:{" "}
+                                {Object.entries(summoner.roleProficiency)
+                                  .filter(([_, value]) => value > 2)
+                                  .map(([role, value]) => `${role}:${value}`)
+                                  .join(", ")}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
                     </div>

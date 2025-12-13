@@ -530,7 +530,7 @@ const TeamBalancer = () => {
                 htmlFor="auto-assign-roles"
                 className="text-xs cursor-pointer"
               >
-                レーン自動割り当て
+                レーン決定
               </Label>
             </div>
 
