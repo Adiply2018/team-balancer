@@ -16,10 +16,13 @@ from pydantic import ValidationError
 from riot_api import get_summoners_data
 from summoner_storage import SummonerStorage
 
-
-from dotenv import load_dotenv
-
-load_dotenv()
+# dotenv is only needed for local development
+# In Lambda, environment variables are already loaded by AWS
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not available in Lambda, which is fine
 
 
 def handle_save_summoners(body: Dict) -> Dict:
