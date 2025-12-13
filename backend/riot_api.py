@@ -207,7 +207,7 @@ class RiotAPI:
                     rank_info["FLEX"] = rank_data["tier"] + " " + rank_data["rank"]
 
             # マッチヒストリーを取得
-            match_count = 3
+            match_count = 20
             match_history = self.get_match_history(
                 puuid, match_type="ranked", count=match_count
             )
@@ -215,7 +215,7 @@ class RiotAPI:
                 match_history = self.get_match_history(puuid, count=match_count)
 
             # マッチ詳細を並列で取得
-            with ThreadPoolExecutor(max_workers=3) as executor:
+            with ThreadPoolExecutor(max_workers=10) as executor:
                 results = list(
                     executor.map(
                         lambda match_id: self.get_player_match_detail(match_id, puuid),
