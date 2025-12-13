@@ -15,6 +15,7 @@ export type ChampInfo = [[string, string], number]; // [[champIcon, champName], 
 export type Summoner = {
   id: string;
   name: string;
+  tag?: string;
   icon?: string;
   level?: number;
   rank: Rank;

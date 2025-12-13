@@ -17,6 +17,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { RANKS, type Summoner, type Role } from "./types";
+import opggIcon from "../../assets/opgg-icon.png";
+import deeplolIcon from "../../assets/deeplol-icon.png";
 
 type SummonerRowProps = {
   idx: number;
@@ -43,6 +45,11 @@ export const SummonerRow = React.memo(
     onToggleSelection,
     onDelete,
   }: SummonerRowProps) => {
+    // サモナー名から name#tag を分離
+    const [summonerName, summonerTag] = summoner.name.includes('#')
+      ? summoner.name.split('#')
+      : [summoner.name, summoner.tag || ''];
+
     return (
       <TableRow
         className={`${!summoner.isSelected ? "line-through text-gray-500" : ""}`}
@@ -73,11 +80,55 @@ export const SummonerRow = React.memo(
               </TooltipProvider>
             )}
             <div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 items-center">
                 <span className="text-sm">
                   {summoner.level != 0 && `Lv.${summoner.level} `}
                 </span>
                 <span className="font-bold">{summoner.name}</span>
+                <div className="flex gap-1 ml-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={`https://www.op.gg/summoners/jp/${encodeURIComponent(summonerName)}${summonerTag ? `-${encodeURIComponent(summonerTag)}` : ""}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:opacity-80 transition-opacity"
+                        >
+                          <img
+                            src={opggIcon}
+                            alt="OP.GG"
+                            className="h-4 w-4 rounded-full"
+                          />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>OP.GGで確認</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={`https://www.deeplol.gg/summoner/jp/${encodeURIComponent(summonerName)}${summonerTag ? `-${encodeURIComponent(summonerTag)}` : ""}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:opacity-80 transition-opacity"
+                        >
+                          <img
+                            src={deeplolIcon}
+                            alt="DeepLol.gg"
+                            className="h-4 w-4 rounded-full"
+                          />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>DeepLol.ggで確認</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </div>
               {summoner.top3Champs && summoner.top3Champs.length > 0 && (
                 <div className="flex gap-1 mt-1">
