@@ -102,9 +102,9 @@ class RiotAPI:
         response = self.request(url, headers=self.headers)
         return response.json()
 
-    def get_rank_info(self, encrypted_summoner_id: str) -> List[Dict]:
-        """暗号化されたサモナーIDからランク情報を取得"""
-        url = f"https://{self.region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{encrypted_summoner_id}"
+    def get_rank_info(self, puuid: str) -> List[Dict]:
+        """PUUIDからランク情報を取得"""
+        url = f"https://{self.region}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}"
         response = self.request(url, headers=self.headers)
         return response.json()
 
@@ -178,14 +178,16 @@ class RiotAPI:
 
             # サモナー名とタグラインを分割
             sn, tagline = summoner_name.split("#")
+            print("sn:", sn, "tagline:", tagline)
 
             # アカウント情報を取得
             account_info = self.get_account(sn, tagline)
+            print("account_info:", account_info)
             puuid = account_info["puuid"]
 
             # サモナー情報を取得
             raw_summoner_info = self.get_summoner_info(puuid)
-            encrypted_summoner_id = raw_summoner_info["id"]
+            print("raw_summoner_info:", raw_summoner_info)
 
             # プロフィールアイコン情報
             icon_num = raw_summoner_info["profileIconId"]
@@ -195,8 +197,8 @@ class RiotAPI:
                 "level": raw_summoner_info["summonerLevel"],
             }
 
-            # ランク情報を取得
-            raw_rank_info = self.get_rank_info(encrypted_summoner_id)
+            # ランク情報を取得（PUUIDを使用）
+            raw_rank_info = self.get_rank_info(puuid)
             rank_info = {"SOLO": "UNRANKED", "FLEX": "UNRANKED"}
             for rank_data in raw_rank_info:
                 if rank_data["queueType"] == "RANKED_SOLO_5x5":
@@ -236,8 +238,9 @@ class RiotAPI:
             self._write_cache(summoner_name, data)
             return data
 
-        except Exception as e:
-            print(f"Error fetching data for {summoner_name}: {str(e)}")
+        except Exception:
+            import traceback
+            print(f"Error fetching data for {summoner_name}: {traceback.format_exc()}")
             return {}
 
 
@@ -258,6 +261,7 @@ def get_summoners_data(summoner_names: List[str]) -> List[Dict]:
 
         for future in future_to_name:
             name = future_to_name[future]
+            print(f"Fetching data for: {name}")
             try:
                 result = future.result()
                 if result:

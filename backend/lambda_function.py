@@ -17,6 +17,11 @@ from riot_api import get_summoners_data
 from summoner_storage import SummonerStorage
 
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 def handle_save_summoners(body: Dict) -> Dict:
     """サモナー情報を保存するハンドラー"""
     try:
@@ -108,6 +113,7 @@ def handle_summoners_request(body: Dict) -> Dict:
     """サモナー情報を取得するハンドラー"""
     try:
         summoner_names = body.get("summonerNames", [])
+
         cleaned_sn_list = [clean_control_chars(sn).strip() for sn in summoner_names]
         summoners_data = get_summoners_data(cleaned_sn_list)
         return create_response(200, summoners_data)
@@ -180,10 +186,12 @@ def lambda_handler(event: Dict, context: Any) -> Dict:
     try:
         try:
             body = json.loads(event.get("body", "{}"))
-        except json.JSONDecodeError:
-            body = {}
-        except TypeError:
-            body = {}
+        # except json.JSONDecodeError:
+        #    body = {}
+        # except TypeError:
+        #    body = {}
+        except Exception:
+            body = event.get("body")
 
         path = event.get("path", "")
 
