@@ -117,7 +117,14 @@ export const SummonerRow = React.memo(
                 <span className="text-sm">
                   {summoner.level != 0 && `Lv.${summoner.level} `}
                 </span>
-                <span className="font-bold">{summoner.name}</span>
+                <a
+                  href={`https://www.deeplol.gg/summoner/jp/${encodeURIComponent(summonerName)}${summonerTag ? `-${encodeURIComponent(summonerTag)}` : ""}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold hover:underline hover:opacity-80 transition-opacity"
+                >
+                  {summoner.name}
+                </a>
                 <div className="flex gap-1 ml-1">
                   <TooltipProvider>
                     <Tooltip>
@@ -137,27 +144,6 @@ export const SummonerRow = React.memo(
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>OP.GGで確認</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <a
-                          href={`https://www.deeplol.gg/summoner/jp/${encodeURIComponent(summonerName)}${summonerTag ? `-${encodeURIComponent(summonerTag)}` : ""}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:opacity-80 transition-opacity"
-                        >
-                          <img
-                            src={deeplolIcon}
-                            alt="DeepLol.gg"
-                            className="h-4 w-4 rounded-full"
-                          />
-                        </a>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>DeepLol.ggで確認</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

@@ -125,13 +125,24 @@ def calculate_team_stats(team: List[Summoner]) -> TeamStats:
 
 def balance_teams(
     summoners: List[Summoner],
-    randomness: float = 0.0
+    randomness: float = 0.0,
+    same_team_groups: List[Dict[str, List[str]]] = None
 ) -> Tuple[List[Summoner], List[Summoner]]:
-    """チーム分け最適化（ランダム性付き）"""
+    """チーム分け最適化（ランダム性付き + 同じチーム制約）
+
+    Args:
+        summoners: サモナーリスト（10人）
+        randomness: ランダム性（0-100）
+        same_team_groups: 同じチームにするグループのリスト
+            例: [{"id": "group1", "summonerIds": ["sid_01", "sid_02"]}]
+    """
     if len(summoners) != 10:
         raise ValueError("Need exactly 10 summoners")
     if not 0 <= randomness <= 100:
         raise ValueError("Randomness must be between 0 and 100")
+
+    if same_team_groups is None:
+        same_team_groups = []
 
     # ランダム性に基づいてスコアにノイズを追加
     noise_scale = randomness / 100.0
@@ -160,6 +171,31 @@ def balance_teams(
     for j in range(2):
         prob += pulp.lpSum(x[i, j] for i in range(10)) == 5
 
+    # 制約条件3: 同じチームグループの制約
+    # グループ内の全員が同じチームに割り当てられる
+    summoner_id_to_index = {s.id: i for i, s in enumerate(summoners)}
+
+    for group in same_team_groups:
+        summoner_ids = group.get("summonerIds", [])
+        if len(summoner_ids) < 2:
+            continue  # グループに2人未満の場合はスキップ
+
+        # グループ内のサモナーのインデックスを取得
+        group_indices = []
+        for summoner_id in summoner_ids:
+            if summoner_id in summoner_id_to_index:
+                group_indices.append(summoner_id_to_index[summoner_id])
+
+        if len(group_indices) < 2:
+            continue  # 有効なサモナーが2人未満の場合はスキップ
+
+        # グループの最初のメンバーと他のメンバーが同じチームになるように制約
+        first_member = group_indices[0]
+        for member in group_indices[1:]:
+            # 両方がチームAまたは両方がチームBに割り当てられる
+            # x[first, 0] == x[member, 0] を実現
+            prob += x[first_member, 0] == x[member, 0]
+
     # チーム間の差分計算
     rank_diff = pulp.lpSum(
         rank_scores[i] * x[i, 0] for i in range(10)
@@ -169,12 +205,12 @@ def balance_teams(
         role_scores[i] * x[i, 0] for i in range(10)
     ) - pulp.lpSum(role_scores[i] * x[i, 1] for i in range(10))
 
-    # 制約条件3: チーム間のランク差を制限
+    # 制約条件4: チーム間のランク差を制限
     rank_limit = 20 * (1 + noise_scale)
     prob += rank_diff <= rank_limit
     prob += rank_diff >= -rank_limit
 
-    # 制約条件4: チーム間のロール習熟度差を制限
+    # 制約条件5: チーム間のロール習熟度差を制限
     role_limit = 10 * (1 + noise_scale)
     prob += role_diff <= role_limit
     prob += role_diff >= -role_limit
