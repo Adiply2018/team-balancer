@@ -39,6 +39,11 @@ export interface TeamStats {
   commonChampions: ChampionStats[];
 }
 
+export type SameTeamGroup = {
+  id: string;
+  summonerIds: string[];
+};
+
 export const RANKS = [
   { value: "CHALLENGER I", label: "Challenger", color: "text-yellow-700" },
   { value: "GRANDMASTER I", label: "Grandmaster", color: "text-red-500" },
