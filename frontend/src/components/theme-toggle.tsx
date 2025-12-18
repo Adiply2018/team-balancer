@@ -8,7 +8,11 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "./ui/button";
 
-const ThemeSwitcher = () => {
+interface ThemeSwitcherProps {
+  onClick?: () => void;
+}
+
+const ThemeSwitcher = ({ onClick }: ThemeSwitcherProps) => {
   const [theme, setTheme] = useState("light");
   const [isMounted, setIsMounted] = useState(false);
 
@@ -24,6 +28,9 @@ const ThemeSwitcher = () => {
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
     document.documentElement.classList.toggle("dark");
+
+    // オプショナルなonClickコールバックを呼び出す
+    onClick?.();
   };
 
   if (!isMounted) {
