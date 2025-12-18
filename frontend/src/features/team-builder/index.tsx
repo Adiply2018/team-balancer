@@ -13,7 +13,7 @@ import {
 import { Swords, Users, Plus, Settings, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SummonerRow } from "./SummonerRow";
-import { type Summoner, type Role, RANKS } from "./types";
+import { type Summoner, type Role, type SameTeamGroup, RANKS } from "./types";
 import TeamResults from "./TeamResults";
 import { Slider } from "@/components/ui/slider";
 import { FireworksDisplay } from "@/components/ui/fireworks";
@@ -28,6 +28,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { DevModal } from "@/components/DevModal";
+import { useDevModeSequence } from "@/hooks/useDevModeSequence";
 
 let idCounter = 1;
 const generateId = () => `sid_${String(idCounter++).padStart(2, "0")}`;
@@ -68,6 +70,13 @@ const TeamBalancer = () => {
   const [fetchProgress, setFetchProgress] = useState(0);
   const [currentFetchingPlayer, setCurrentFetchingPlayer] = useState("");
   const [autoAssignRoles, setAutoAssignRoles] = useState(true);
+  const [devModalOpen, setDevModalOpen] = useState(false);
+  const [sameTeamGroups, setSameTeamGroups] = useState<SameTeamGroup[]>([]);
+
+  // 開発者モード隠しコマンド
+  const { handleThemeClick } = useDevModeSequence({
+    onSequenceComplete: () => setDevModalOpen(true),
+  });
 
   const selectedCount = useMemo(
     () => summoners.filter((s) => s.isSelected).length,
@@ -310,6 +319,7 @@ const TeamBalancer = () => {
             summoners: updatedSummoners,
             randomness: randomness[0],
             autoAssignRoles: autoAssignRoles,
+            sameTeamGroups: sameTeamGroups,
           }),
         },
       );
@@ -343,7 +353,7 @@ const TeamBalancer = () => {
       toast.error("チーム分けに失敗しました。");
     }
     setIsBalancingTeams(false);
-  }, [summoners, randomness]);
+  }, [summoners, randomness, autoAssignRoles, sameTeamGroups]);
 
   const handleLoadSummoners = useCallback((loadedSummoners: Summoner[]) => {
     setSummoners(loadedSummoners);
@@ -376,7 +386,7 @@ const TeamBalancer = () => {
           >
             <Settings className="h-5 w-5" />
           </Button>
-          <ThemeSwitcher />
+          <ThemeSwitcher onClick={handleThemeClick} />
         </div>
       </div>
 
@@ -593,6 +603,14 @@ const TeamBalancer = () => {
           </TableBody>
         </Table>
       </div>
+
+      <DevModal
+        open={devModalOpen}
+        onOpenChange={setDevModalOpen}
+        summoners={summoners}
+        sameTeamGroups={sameTeamGroups}
+        onSameTeamGroupsChange={setSameTeamGroups}
+      />
     </div>
   );
 };
