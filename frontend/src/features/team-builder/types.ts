@@ -39,9 +39,12 @@ export interface TeamStats {
   commonChampions: ChampionStats[];
 }
 
-export type SameTeamGroup = {
+export type TeamConstraintType = "same" | "opposite";
+
+export type TeamConstraintGroup = {
   id: string;
   summonerIds: string[];
+  type: TeamConstraintType; // "same": 同じチーム, "opposite": 違うチーム
 };
 
 export const RANKS = [

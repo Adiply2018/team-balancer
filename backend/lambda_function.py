@@ -157,16 +157,16 @@ def handle_balance_teams_request(body: Dict) -> Dict:
 
         randomness = float(body.get("randomness", 0.0))
         auto_assign_roles = body.get("autoAssignRoles", True)
-        same_team_groups = body.get("sameTeamGroups", [])
+        team_constraint_groups = body.get("teamConstraintGroups", [])
 
         # ランク形式を標準化
         normalized_summoners = normalize_rank_format(summoners)
 
-        # チーム分け実行（同じチーム制約付き）
+        # チーム分け実行（チーム制約付き）
         team_a, team_b = balance_teams(
             normalized_summoners,
             randomness,
-            same_team_groups
+            team_constraint_groups
         )
 
         # ロール割り当て実行（トグルがONの場合のみ）

@@ -13,7 +13,7 @@ import {
 import { Swords, Users, Plus, Settings, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SummonerRow } from "./SummonerRow";
-import { type Summoner, type Role, type SameTeamGroup, RANKS } from "./types";
+import { type Summoner, type Role, type TeamConstraintGroup, RANKS } from "./types";
 import TeamResults from "./TeamResults";
 import { Slider } from "@/components/ui/slider";
 import { FireworksDisplay } from "@/components/ui/fireworks";
@@ -71,7 +71,7 @@ const TeamBalancer = () => {
   const [currentFetchingPlayer, setCurrentFetchingPlayer] = useState("");
   const [autoAssignRoles, setAutoAssignRoles] = useState(true);
   const [devModalOpen, setDevModalOpen] = useState(false);
-  const [sameTeamGroups, setSameTeamGroups] = useState<SameTeamGroup[]>([]);
+  const [teamConstraintGroups, setTeamConstraintGroups] = useState<TeamConstraintGroup[]>([]);
 
   // 開発者モード隠しコマンド
   const { handleThemeClick } = useDevModeSequence({
@@ -319,7 +319,7 @@ const TeamBalancer = () => {
             summoners: updatedSummoners,
             randomness: randomness[0],
             autoAssignRoles: autoAssignRoles,
-            sameTeamGroups: sameTeamGroups,
+            teamConstraintGroups: teamConstraintGroups,
           }),
         },
       );
@@ -353,7 +353,7 @@ const TeamBalancer = () => {
       toast.error("チーム分けに失敗しました。");
     }
     setIsBalancingTeams(false);
-  }, [summoners, randomness, autoAssignRoles, sameTeamGroups]);
+  }, [summoners, randomness, autoAssignRoles, teamConstraintGroups]);
 
   const handleLoadSummoners = useCallback((loadedSummoners: Summoner[]) => {
     setSummoners(loadedSummoners);
@@ -608,8 +608,8 @@ const TeamBalancer = () => {
         open={devModalOpen}
         onOpenChange={setDevModalOpen}
         summoners={summoners}
-        sameTeamGroups={sameTeamGroups}
-        onSameTeamGroupsChange={setSameTeamGroups}
+        teamConstraintGroups={teamConstraintGroups}
+        onTeamConstraintGroupsChange={setTeamConstraintGroups}
       />
     </div>
   );
