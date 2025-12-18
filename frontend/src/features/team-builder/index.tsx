@@ -63,7 +63,7 @@ const TeamBalancer = () => {
   const [teamB, setTeamB] = useState<Summoner[]>([]);
   const [teamAStats, setTeamAStats] = useState(null);
   const [teamBStats, setTeamBStats] = useState(null);
-  const [randomness, setRandomness] = useState([0]);
+  const [randomness, setRandomness] = useState([5]);
   const [showFireworks, setShowFireworks] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
