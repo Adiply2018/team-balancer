@@ -33,10 +33,10 @@ export function useDevModeSequence({
     }
   }, [onSequenceComplete, resetSequence]);
 
-  // Ctrl+Shift+J のキーボードイベント
+  // Ctrl+Shift+F のキーボードイベント
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === "J") {
+      if (e.ctrlKey && e.shiftKey && e.key === "F") {
         e.preventDefault();
         isActiveRef.current = true;
         clickCountRef.current = 0;
