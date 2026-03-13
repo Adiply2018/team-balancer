@@ -74,7 +74,7 @@ const TeamBalancer = () => {
   const [teamConstraintGroups, setTeamConstraintGroups] = useState<TeamConstraintGroup[]>([]);
 
   // 開発者モード隠しコマンド
-  const { handleThemeClick } = useDevModeSequence({
+  const { handleIconClick, handleThemeClick } = useDevModeSequence({
     onSequenceComplete: () => setDevModalOpen(true),
   });
 
@@ -366,7 +366,8 @@ const TeamBalancer = () => {
           <img
             src={MOMONGA_ICON}
             alt="MOMONGA"
-            className="w-10 h-10 rounded-full"
+            className="w-10 h-10 rounded-full select-none"
+            onClick={handleIconClick}
           />
           <h1 className="text-2xl font-bold">LoLカスタムチーム分けツール</h1>
         </div>
